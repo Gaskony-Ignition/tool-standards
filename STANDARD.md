@@ -20,7 +20,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Rule | Why | Check |
 | --- | --- | --- |
 | Name every component for what it is for, in PascalCase; never leave a Designer default (`Label_0`). | Names show in bindings, scripts and the tree. | V1, NamePatternRule |
-| camelCase custom properties, params, custom methods and message handlers. | One style across scripts and views. | NamePatternRule |
+| camelCase custom properties, params, custom methods and message handlers; a message type shared between projects may be kebab-case under the project's prefix (`am-presence`). | One style across scripts and views. | NamePatternRule |
 | Flex root by default; coordinate only for a fixed drawing. | Flex containers resize with the session. | review |
 | Inputs in `params`, internal state in `custom`. | A view's interface is readable at a glance. | review |
 | No binding from one component into another component's props; go through `view.custom` or a param. | Cross-component bindings break when either is moved. | V6 |
