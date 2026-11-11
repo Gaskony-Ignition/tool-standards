@@ -12,9 +12,12 @@ import ast
 import json
 import os
 import re
+import subprocess
 import sys
 
 PRUNE = {"node_modules", "dist", "build", ".git", ".ignition-lint", ".claude"}
+# Generated files that are never committed, for a target that is not a git work tree.
+UNTRACKED = {"__pycache__", ".resources", ".DS_Store", "Thumbs.db"}
 # Floats only: integer members are mostly counts and states, which have no unit.
 ANALOGUE_TYPES = {"Float4", "Float8"}
 TAG_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*$")
@@ -666,8 +669,25 @@ def check_q1(repo):
                     yield repo.rel(f), 1, "Q1", "QueryString parameter %s" % p.get("identifier")
 
 
+def git_ignored(root, paths):
+    """The paths git ignores, or those named in UNTRACKED when root is not a git work tree."""
+    if not paths:
+        return set()
+    try:
+        inside = subprocess.run(["git", "-C", root, "rev-parse", "--is-inside-work-tree"],
+                                capture_output=True, text=True).stdout.strip() == "true"
+    except OSError:
+        inside = False
+    if not inside:
+        return {os.path.normpath(p) for p in paths if os.path.basename(os.path.normpath(p)) in UNTRACKED}
+    out = subprocess.run(["git", "-C", root, "check-ignore", "--stdin", "-z"], capture_output=True,
+                         text=True, input="\0".join(paths) + "\0").stdout
+    return {os.path.normpath(os.path.join(root, p)) for p in out.split("\0") if p}
+
+
 def check_p1(repo):
     """Resource folder whose contents do not match its resource.json files list."""
+    extra = []
     for dirpath, dirnames, filenames in repo.dirs:
         if "resource.json" not in filenames:
             continue
@@ -677,12 +697,17 @@ def check_p1(repo):
             continue
         declared = set(d["files"])
         rel = repo.rel(manifest)
-        for name in sorted(set(filenames) - declared - {"resource.json"}):
-            yield rel, 1, "P1", "%s is not in files" % name
+        # auth.json is the WebDev stamp tool's input, deliberately left out of files.
+        for name in sorted(set(filenames) - declared - {"resource.json", "auth.json"}):
+            extra.append((rel, os.path.join(dirpath, name), "%s is not in files" % name))
         for name in sorted(set(dirnames) - declared):
-            yield rel, 1, "P1", "%s/ is a directory inside a resource folder" % name
+            extra.append((rel, os.path.join(dirpath, name, ""), "%s/ is a directory inside a resource folder" % name))
         for name in sorted(declared - set(filenames) - set(dirnames)):
             yield rel, 1, "P1", "%s is declared but missing" % name
+    ignored = git_ignored(repo.root, [p for _, p, _ in extra])
+    for rel, p, msg in extra:
+        if os.path.normpath(p) not in ignored:
+            yield rel, 1, "P1", msg
 
 
 RULES = {
