@@ -85,7 +85,7 @@ def parse_pylint(repo, text):
             continue
         path, n, cat, msg, sym = m.groups()
         severity = "error" if cat in "EF" else "style" if sym in STYLE_SYMBOLS else "warning"
-        out.append(Finding("pylint", sym, rel(repo, path), int(n), msg, severity, line.strip(), [sym]))
+        out.append(Finding("pylint", sym, os.path.relpath(os.path.abspath(path), repo), int(n), msg, severity, line.strip(), [sym]))
     return out
 
 
