@@ -1,0 +1,65 @@
+{
+  "custom": {},
+  "params": {
+    "areaId": "",
+    "lineId": ""
+  },
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Save"
+        },
+        "props": {
+          "text": "Save"
+        },
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\tpkg.mod.save(self, event)"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Load"
+        },
+        "props": {
+          "text": "Load"
+        },
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\tpkg.mod.load(self.view.params.lineId)"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "propConfig": {
+    "params.areaId": {
+      "paramDirection": "input"
+    },
+    "params.lineId": {
+      "paramDirection": "input"
+    }
+  }
+}

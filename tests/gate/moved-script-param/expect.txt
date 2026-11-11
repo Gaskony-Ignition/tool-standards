@@ -1,0 +1,2 @@
+UnusedCustomPropertiesRule params.areaId: view parameter 'areaId' is defined but never referenced
+lint-gate: FAIL - 1 new
