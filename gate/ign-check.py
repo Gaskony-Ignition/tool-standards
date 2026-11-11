@@ -550,12 +550,6 @@ def split_vars(text):
     return "".join(rest), fallbacks
 
 
-def has_colour(text):
-    """True when CSS text holds a literal colour, var() fallbacks included."""
-    rest, fallbacks = split_vars(text)
-    return bool(COLOUR_VALUE.match(rest) or COLOUR_IN_CSS.search(rest)) or any(map(has_colour, fallbacks))
-
-
 def colour_paths(node, keypath):
     """(key path, what) under a props style whose value holds a literal colour."""
     if isinstance(node, dict):
@@ -567,11 +561,10 @@ def colour_paths(node, keypath):
             yield from colour_paths(v, keypath + "[]")
     # Style only: chart and symbol props hold colours the component writes itself.
     elif isinstance(node, str) and ".style." in keypath + ".":
-        rest, fallbacks = split_vars(node)
+        # A literal inside a var() fallback is allowed: it only shows when the theme is missing.
+        rest, _ = split_vars(node)
         if COLOUR_VALUE.match(rest) or COLOUR_IN_CSS.search(rest):
             yield keypath, "literal colour"
-        elif any(map(has_colour, fallbacks)):
-            yield keypath, "literal colour in a var() fallback"
 
 
 def css_variable_findings(repo):
@@ -820,7 +813,7 @@ RULES = {
     "V1": ("component left with the Designer's default name", check_v1),
     "V2": ("inline view script over 5 statement lines", check_v2),
     "V3": ("binding that polls a script, or tag() in an expression", check_v3),
-    "V4": ("literal colour in component props or a var() fallback; undefined CSS variable when configured", check_v4),
+    "V4": ("literal colour in component props; undefined CSS variable when configured", check_v4),
     "V5": ("chain of embedded views more than 3 deep", check_v5),
     "V6": ("property binding that reads another component's props", check_v6),
     "T1": ("tag, folder, UDT or member name that is not an identifier", check_t1),
