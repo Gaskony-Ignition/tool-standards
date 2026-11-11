@@ -650,12 +650,46 @@ def check_t1(repo):
                 yield repo.rel(f), 1, "T1", "tag name is not an identifier: %s" % p
 
 
+def units_set(node, path=""):
+    """Member paths under a UDT instance that set their own engUnit."""
+    out = set()
+    for t in node.get("tags") or []:
+        if isinstance(t, dict):
+            p = "%s/%s" % (path, t.get("name")) if path else str(t.get("name"))
+            if t.get("engUnit"):
+                out.add(p)
+            out |= units_set(t, p)
+    return out
+
+
+def instances(node, acc):
+    """Map each typeId to the set of unit-bearing member paths of each of its instances."""
+    for t in node.get("tags") or []:
+        if isinstance(t, dict):
+            if t.get("tagType") == "UdtInstance":
+                acc.setdefault(str(t.get("typeId")), []).append(units_set(t))
+            instances(t, acc)
+    return acc
+
+
 def check_t2(repo):
-    """Numeric UDT member with no engineering unit."""
-    for f, d in tag_exports(repo):
+    """Float UDT member with no engineering unit, unless every instance of the type sets one."""
+    exports, acc = tag_exports(repo), {}
+    for _, d in exports:
+        instances(d, acc)
+    for f, d in exports:
+        types = []
         for p, t, _, in_udt in walk_tags(d, ""):
-            if in_udt and t.get("tagType") == "AtomicTag" and t.get("dataType") in ANALOGUE_TYPES \
-                    and not t.get("engUnit"):
+            if t.get("tagType") == "UdtType":
+                types.append(p)
+            if not (in_udt and t.get("tagType") == "AtomicTag" and t.get("dataType") in ANALOGUE_TYPES) \
+                    or t.get("engUnit"):
+                continue
+            home = max((u for u in types if p.startswith(u + "/")), key=len, default="")
+            type_id = home.split("_types_/", 1)[-1]
+            member = p[len(home) + 1:]
+            found = acc.get(type_id, [])
+            if not found or not all(member in s for s in found):
                 yield repo.rel(f), 1, "T2", "UDT member has no engUnit: %s" % p
 
 
@@ -724,7 +758,7 @@ RULES = {
     "V5": ("chain of embedded views more than 3 deep", check_v5),
     "V6": ("property binding that reads another component's props", check_v6),
     "T1": ("tag, folder, UDT or member name that is not an identifier", check_t1),
-    "T2": ("float UDT member with no engUnit", check_t2),
+    "T2": ("float UDT member with no engUnit, in the type or on every instance", check_t2),
     "Q1": ("named query with a QueryString parameter", check_q1),
     "P1": ("resource folder that does not match its resource.json files", check_p1),
 }

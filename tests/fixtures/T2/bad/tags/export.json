@@ -35,8 +35,66 @@
               ]
             }
           ]
+        },
+        {
+          "name": "Vessel",
+          "tagType": "UdtType",
+          "tags": [
+            {
+              "name": "Inventory",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Float8"
+            },
+            {
+              "name": "Level",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Float8",
+              "engUnit": "%"
+            }
+          ]
+        },
+        {
+          "name": "Loop",
+          "tagType": "UdtType",
+          "parameters": {
+            "unit": {
+              "dataType": "String",
+              "value": "kPa"
+            }
+          },
+          "tags": [
+            {
+              "name": "PV",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Float8",
+              "engUnit": {
+                "bindType": "parameter",
+                "binding": "{unit}"
+              }
+            }
+          ]
         }
       ]
+    },
+    {
+      "name": "SP201",
+      "tagType": "UdtInstance",
+      "typeId": "Vessel",
+      "tags": [
+        {
+          "name": "Inventory",
+          "engUnit": "t"
+        }
+      ]
+    },
+    {
+      "name": "TK301",
+      "tagType": "UdtInstance",
+      "typeId": "Vessel",
+      "tags": []
     }
   ]
 }
