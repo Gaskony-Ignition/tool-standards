@@ -9,6 +9,7 @@ Prints `<path>:<line>: <ID> <message>` per finding, sorted. Exit 0 whatever it f
 """
 import argparse
 import ast
+import collections
 import json
 import os
 import re
@@ -432,12 +433,92 @@ def check_s5(repo):
                 yield rel, line, "S5", "%s %s" % (what, ctx)
 
 
+def sql_constants(tree):
+    """Module-level UPPER_SNAKE names bound once to a string ("str") or a string-only dict, tuple or list ("table")."""
+    # Every binding of every name anywhere: a constant must have exactly one, its module-level assignment.
+    stores = collections.Counter()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and not isinstance(node.ctx, ast.Load):
+            stores[node.id] += 1
+        elif isinstance(node, ast.arg):
+            stores[node.arg] += 1
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.ExceptHandler)):
+            stores[node.name] += 1
+        elif isinstance(node, (ast.Global, ast.Nonlocal)):
+            stores.update(node.names)
+        elif isinstance(node, ast.alias):
+            stores[node.asname or node.name.split(".")[0]] += 1
+    out = {}
+    text = lambda n: isinstance(n, ast.Constant) and isinstance(n.value, str)
+    for node in tree.body:
+        if not (isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)):
+            continue
+        name, value = node.targets[0].id, node.value
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]*", name) or stores.get(name) != 1:
+            continue
+        if text(value):
+            out[name] = "str"
+        elif isinstance(value, (ast.Tuple, ast.List)) and all(text(e) for e in value.elts):
+            out[name] = "table"
+        elif isinstance(value, ast.Dict) and all(k is not None and text(k) for k in value.keys) \
+                and all(text(v) for v in value.values):
+            out[name] = "table"
+    return out
+
+
+def constant_sql(node, consts):
+    """True when node is SQL whose only interpolated values are module string constants."""
+    def operand(n):
+        if isinstance(n, ast.Name):
+            return consts.get(n.id) == "str"
+        return isinstance(n, ast.Subscript) and isinstance(n.value, ast.Name) and consts.get(n.value.id) == "table"
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return True
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return all(constant_sql(n, consts) or operand(n) for n in (node.left, node.right))
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod):
+        args = node.right.elts if isinstance(node.right, ast.Tuple) else [node.right]
+        return constant_sql(node.left, consts) and all(operand(n) for n in args)
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "format":
+        return constant_sql(node.func.value, consts) and all(operand(n) for n in node.args) \
+            and all(k.arg and operand(k.value) for k in node.keywords)
+    return False
+
+
+def sql_calls(text):
+    """{(line, function): whether its SQL interpolates only module constants} for each system.db call.
+
+    Empty when the text does not parse as Python 3, so the regex check alone decides.
+    """
+    try:
+        tree = ast.parse(text)
+    except (SyntaxError, ValueError):
+        return {}
+    consts, out = sql_constants(tree), {}
+    for node in ast.walk(tree):
+        f = getattr(node, "func", None)
+        if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Attribute) and f.value.attr == "db" \
+                and isinstance(f.value.value, ast.Name) and f.value.value.id == "system":
+            ok = bool(node.args) and constant_sql(node.args[0], consts)
+            for line in range(node.lineno, node.end_lineno + 1):
+                out[line, f.attr] = out.get((line, f.attr), True) and ok
+    return out
+
+
 def check_s6(repo):
     """system.db.run*Query with a SQL string built by +, % or .format()."""
     for rel, pairs, label in repo.scripts():
+        calls = {}
+        if label is None:
+            with open(os.path.join(repo.root, rel), encoding="utf-8", errors="replace") as fh:
+                calls = sql_calls(fh.read())
         for lg, owner in pairs:
             for m in re.finditer(r"\bsystem\.db\.(runQuery|runUpdateQuery|runScalarQuery)\s*\(", lg.masked):
                 arg = first_argument(lg.masked, m.end() - 1)
+                # A table name cannot be a ? parameter, and a module string constant is not input.
+                seen = [calls[n, m.group(1)] for n in range(lg.start, lg.end + 1) if (n, m.group(1)) in calls]
+                if seen and all(seen):
+                    continue
                 if "+" in arg or "%" in arg or ".format(" in arg:
                     line, ctx = located(lg, owner, label)
                     yield rel, line, "S6", "%s with a built SQL string %s" % (m.group(1), ctx)

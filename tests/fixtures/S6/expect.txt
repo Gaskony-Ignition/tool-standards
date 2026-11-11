@@ -1,3 +1,11 @@
 S6 runQuery with a built SQL string in f
 S6 runScalarQuery with a built SQL string in f
 S6 runUpdateQuery with a built SQL string in root/Go onActionPerformed
+S6 runQuery with a built SQL string in mixed
+S6 runUpdateQuery with a built SQL string in attribute
+S6 runScalarQuery with a built SQL string in called
+S6 runQuery with a built SQL string in notStrings
+S6 runScalarQuery with a built SQL string in reassigned
+S6 runUpdateQuery with a built SQL string in shadowed
+S6 runQuery with a built SQL string in looped
+S6 runScalarQuery with a built SQL string in legacy

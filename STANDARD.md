@@ -62,7 +62,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 
 | Rule | Why | Check |
 | --- | --- | --- |
-| Named queries or `runPrep*` with `?` placeholders; never SQL built by concatenation or formatting. | Injection and quoting bugs. | S6 |
+| Named queries or `runPrep*` with `?` placeholders; never SQL built by concatenation or formatting, except a table or column name from a module-level UPPER_SNAKE string constant. | Injection and quoting bugs. | S6 |
 | No QueryString parameters. | They substitute text into the SQL. | Q1 |
 | PascalCase query names, camelCase parameters. | Matches views and scripts. | review |
 
