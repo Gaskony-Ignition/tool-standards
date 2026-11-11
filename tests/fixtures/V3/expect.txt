@@ -1,2 +1,7 @@
-V3 runScript() in expression on root/Value props.text
+V3 runScript() with no poll rate on root/NoRate props.text
+V3 runScript() polled at rate 1000 on root/Polled props.text
+V3 runScript() polled at rate {view.custom.rate} on root/Bound props.text
+V3 runScript() whose first argument is not a function path on root/Inline props.text
+V3 now() polls a script on root/Clock props.text
+V3 now() polls a script on root/Ticking props.text
 V3 tag() in expression on root/Raw props.text

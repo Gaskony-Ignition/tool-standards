@@ -20,7 +20,64 @@
             "binding": {
               "type": "expr",
               "config": {
-                "expression": "isTag({view.params.path})"
+                "expression": "runScript(\"pkg.mod.f\", 0, {view.params.path}, \"tag(x)\")"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Clock"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "now(0)"
+              },
+              "transforms": [
+                {
+                  "type": "script",
+                  "code": "\treturn pkg.mod.f(value)"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Time"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "dateFormat(now(1000), \"HH:mm\")"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Path"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "isTag({view.params.tag}) && getTag(1)"
               }
             }
           }

@@ -12,7 +12,7 @@
       {
         "type": "ia.display.label",
         "meta": {
-          "name": "Value"
+          "name": "NoRate"
         },
         "props": {},
         "propConfig": {
@@ -20,7 +20,98 @@
             "binding": {
               "type": "expr",
               "config": {
-                "expression": "runScript(\"pkg.mod.f\", 0)"
+                "expression": "runScript(\"pkg.mod.f\")"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Polled"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", 1000, {view.params.path})"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Bound"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", {view.custom.rate})"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Inline"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"system.project.getProjectName()\", 0)"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Clock"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "now()"
+              },
+              "transforms": [
+                {
+                  "type": "script",
+                  "code": "\treturn pkg.mod.f(value)"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Ticking"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", 0, now(5000))"
               }
             }
           }

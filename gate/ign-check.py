@@ -461,14 +461,61 @@ def check_v2(repo):
             yield repo.rel(path), 1, "V2", "%s is a long inline script" % label
 
 
+def blank(expr):
+    """Expression with the inside of every string literal and {property reference} blanked, same length."""
+    return re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|\{[^{}]*\}',
+                  lambda m: m.group(0)[0] + " " * (len(m.group(0)) - 2) + m.group(0)[-1], expr)
+
+
+def call_arguments(expr, masked, start):
+    """Stripped text of each argument of the call whose opening bracket is at start."""
+    args, depth, begin = [], 0, start + 1
+    for j in range(start, len(masked)):
+        ch = masked[j]
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+            if depth == 0:
+                args.append(expr[begin:j].strip())
+                break
+        elif ch == "," and depth == 1:
+            args.append(expr[begin:j].strip())
+            begin = j + 1
+    return [] if args == [""] else args
+
+
+def polling_problems(expr, scripted):
+    """What makes an expression poll a script or read a tag by path; scripted when a script transform follows it."""
+    masked, out = blank(expr), []
+    calls = [(m.group(1), call_arguments(expr, masked, m.end() - 1))
+             for m in re.finditer(r"(?<![\w.])(runScript|now|tag)\s*\(", masked)]
+    for fn, args in calls:
+        if fn == "tag":
+            out.append("tag() in expression")
+        elif fn == "runScript":
+            if not args or not re.fullmatch(r"([\"'])[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+\1", args[0]):
+                out.append("runScript() whose first argument is not a function path")
+            if len(args) < 2:
+                out.append("runScript() with no poll rate")
+            elif args[1] != "0":
+                out.append("runScript() polled at rate %s" % args[1])
+    # now() with no argument polls every second; runScript re-runs whenever now() ticks.
+    if scripted or any(fn == "runScript" for fn, _ in calls):
+        if any(fn == "now" and (not args or args[0] != "0") for fn, args in calls):
+            out.append("now() polls a script")
+    return out
+
+
 def check_v3(repo):
-    """runScript() or tag() in an expression."""
+    """A binding that polls a script, or tag() in an expression."""
     for path, view in repo.views():
         for cpath, comp in parts(view):
             for key, expr in expressions_of(comp):
-                masked = re.sub(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'', '""', expr)
-                for fn in sorted(set(re.findall(r"(?<![\w.])(runScript|tag)\s*\(", masked))):
-                    yield repo.rel(path), 1, "V3", "%s() in expression on %s %s" % (fn, cpath, key)
+                b = (comp["propConfig"][key] or {}).get("binding") or {}
+                scripted = any(t.get("type") == "script" for t in b.get("transforms") or [])
+                for problem in sorted(set(polling_problems(expr, scripted))):
+                    yield repo.rel(path), 1, "V3", "%s on %s %s" % (problem, cpath, key)
 
 
 def colour_paths(node, keypath):
@@ -647,7 +694,7 @@ RULES = {
     "S6": ("system.db.run*Query with SQL built by +, % or .format()", check_s6),
     "V1": ("component left with the Designer's default name", check_v1),
     "V2": ("inline view script over 5 statement lines", check_v2),
-    "V3": ("runScript() or tag() in an expression", check_v3),
+    "V3": ("binding that polls a script, or tag() in an expression", check_v3),
     "V4": ("literal colour in component props", check_v4),
     "V5": ("chain of embedded views more than 3 deep", check_v5),
     "V6": ("property binding that reads another component's props", check_v6),
