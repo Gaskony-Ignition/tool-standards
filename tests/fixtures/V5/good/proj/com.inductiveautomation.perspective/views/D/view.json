@@ -1,0 +1,33 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.view",
+        "meta": {
+          "name": "Detail"
+        },
+        "props": {
+          "path": "A"
+        },
+        "propConfig": {
+          "props.path": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "{view.params.p}"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

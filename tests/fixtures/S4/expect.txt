@@ -1,0 +1,4 @@
+S4 history note "previously" in f
+S4 history note "we decided" in f
+S4 commented-out code in f
+S4 history note "FIX-12" at module level

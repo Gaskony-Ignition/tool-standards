@@ -1,0 +1,53 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "FlexContainer_3"
+        },
+        "props": {},
+        "children": [
+          {
+            "type": "ia.display.label",
+            "meta": {
+              "name": "Label_0"
+            },
+            "props": {}
+          }
+        ]
+      },
+      {
+        "type": "ia.display.view",
+        "meta": {
+          "name": "EmbeddedView"
+        },
+        "props": {
+          "path": "Other"
+        }
+      },
+      {
+        "type": "ia.display.flex-repeater",
+        "meta": {
+          "name": "FlexRepeater"
+        },
+        "props": {}
+      },
+      {
+        "type": "ia.display.icon",
+        "meta": {
+          "name": "Icon_1"
+        },
+        "props": {}
+      }
+    ]
+  }
+}

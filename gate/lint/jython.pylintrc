@@ -1,0 +1,56 @@
+# Pylint rules for Ignition Jython 2.7, used by lint-gate.sh for view scripts
+# (through ign-lint) and for script-library code.py alike. lint-gate.sh appends
+# additional-builtins: system plus every script package in the repo, which
+# pylint cannot otherwise see.
+#
+# Real faults, plus camelCase names for functions, methods and arguments
+# (invalid-name, a style finding the baseline can hold). Pylint parses
+# with Python 3, so Jython-only syntax (`except X, e`, print statements) is a
+# syntax error here: write the form both accept (`except X as e`).
+
+[MAIN]
+persistent=no
+jobs=1
+
+[MESSAGES CONTROL]
+# The E codes disabled below misfire on Java classes and Ignition objects,
+# which pylint cannot see.
+disable=C,R,W,I,
+        import-error,
+        no-member,
+        no-name-in-module,
+        c-extension-no-member,
+        not-callable,
+        unsubscriptable-object,
+        unsupported-assignment-operation,
+        unsupported-membership-test,
+        not-an-iterable,
+        return-outside-function,
+        bad-reversed-sequence
+enable=
+       unused-variable,
+       unused-import,
+       unreachable,
+       dangerous-default-value,
+       duplicate-key,
+       self-assigning-variable,
+       pointless-statement,
+       invalid-name
+
+[BASIC]
+# invalid-name covers every kind of name; only these three are checked.
+function-rgx=(_?[a-z][a-zA-Z0-9]*|__[a-z][a-z0-9_]*__)$
+method-rgx=(_?[a-z][a-zA-Z0-9]*|__[a-z][a-z0-9_]*__)$
+argument-rgx=_?[a-z][a-zA-Z0-9]*$
+variable-rgx=.*
+inlinevar-rgx=.*
+const-rgx=.*
+module-rgx=.*
+class-rgx=.*
+attr-rgx=.*
+class-attribute-rgx=.*
+class-const-rgx=.*
+
+[REPORTS]
+reports=no
+score=no

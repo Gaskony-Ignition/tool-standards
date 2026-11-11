@@ -1,0 +1,63 @@
+{
+  "name": "",
+  "tagType": "Provider",
+  "tags": [
+    {
+      "name": "_types_",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Tank",
+          "tagType": "UdtType",
+          "tags": [
+            {
+              "name": "Level",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Float8",
+              "engUnit": "m"
+            },
+            {
+              "name": "Running",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Boolean"
+            },
+            {
+              "name": "Inlet",
+              "tagType": "UdtInstance",
+              "typeId": "Valve",
+              "tags": [
+                {
+                  "name": "Position",
+                  "tagType": "AtomicTag",
+                  "valueSource": "memory",
+                  "dataType": "Float8"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "T1",
+      "tagType": "UdtInstance",
+      "typeId": "Tank",
+      "tags": [
+        {
+          "name": "Level",
+          "tagType": "AtomicTag",
+          "valueSource": "memory",
+          "dataType": "Float8"
+        }
+      ]
+    },
+    {
+      "name": "Loose",
+      "tagType": "AtomicTag",
+      "valueSource": "memory",
+      "dataType": "Float8"
+    }
+  ]
+}

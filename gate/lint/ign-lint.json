@@ -1,0 +1,30 @@
+{
+  "_comment": "lint-gate.sh config for ign-lint (bw-design-group/ignition-lint). Errors fail the gate; warnings print only; NamePatternRule findings are style and fail unless baselined. The gate fills in PylintScriptRule's pylintrc.",
+  "PylintScriptRule": {
+    "enabled": true,
+    "kwargs": {
+      "pylintrc": null,
+      "category_mapping": {"F": "error", "E": "error", "W": "warning", "C": "warning", "R": "warning"}
+    }
+  },
+  "_PollingIntervalRule": "A 1 s clock is fine; faster than that re-evaluates for nothing.",
+  "PollingIntervalRule": {"enabled": true, "kwargs": {"minimum_interval": 1000}},
+  "_NamePatternRule": "Components PascalCase; properties, custom methods and message handlers camelCase. Its 'property' node is every prop and nested key, so baseline.py keeps only direct children of custom and params. Abbreviation detection is off: it rewrites 'click' as 'CLIck' and then fails it.",
+  "NamePatternRule": {"enabled": true, "kwargs": {
+    "severity": "warning",
+    "auto_detect_abbreviations": false,
+    "node_type_specific_rules": {
+      "component": {"convention": "PascalCase"},
+      "property": {"convention": "camelCase"},
+      "custom_method": {"convention": "camelCase"},
+      "message_handler": {"convention": "camelCase"}
+    }
+  }},
+  "UnusedCustomPropertiesRule": {"enabled": true, "kwargs": {}},
+  "ExcessiveContextDataRule": {"enabled": true, "kwargs": {}},
+  "BadComponentReferenceRule": {"enabled": true, "kwargs": {"severity": "warning"}},
+  "_ComponentReferenceValidationRule": "ign-lint reads ../../X as a sibling named '..'. Perspective resolves ../../X and .../X alike (checked on 8.3.8), so write the .../X form.",
+  "ComponentReferenceValidationRule": {"enabled": true, "kwargs": {}},
+  "PropertyPersistenceRule": {"enabled": false, "kwargs": {}},
+  "PropertyAccessRule": {"enabled": false, "kwargs": {}}
+}

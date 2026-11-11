@@ -1,0 +1,48 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Value"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "isTag({view.params.path})"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Raw"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "\"use tag(x) here\" + {view.custom.tag}"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

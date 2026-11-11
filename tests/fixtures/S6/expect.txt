@@ -1,0 +1,3 @@
+S6 runQuery with a built SQL string in f
+S6 runScalarQuery with a built SQL string in f
+S6 runUpdateQuery with a built SQL string in root/Go onActionPerformed

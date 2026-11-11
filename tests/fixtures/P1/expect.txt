@@ -1,0 +1,3 @@
+P1 code.py.bak is not in files
+P1 notes.txt is declared but missing
+P1 old/ is a directory inside a resource folder

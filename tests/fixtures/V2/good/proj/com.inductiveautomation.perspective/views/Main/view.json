@@ -1,0 +1,32 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Go"
+        },
+        "props": {},
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\t# one\n\t# two\n\ta = 1\n\n\tb = 2\n\tc = 3\n\td = 4\n\te = 5\n"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

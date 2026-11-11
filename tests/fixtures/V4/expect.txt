@@ -1,0 +1,2 @@
+V4 literal colour at root/Value props.style.backgroundColor
+V4 literal colour at root/Value props.style.border

@@ -1,0 +1,48 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Copy"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "../Source.props.text"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Deep"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "/root/Panel/Source.props.value"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

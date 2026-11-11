@@ -1,0 +1,30 @@
+name: lint
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the calling repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # job.workflow_* name this reusable workflow's own repo and commit, so the
+      # gate runs at the ref the caller pinned. Moved out of the workspace so the
+      # gate does not lint its own test fixtures.
+      - name: Check out the gate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .tool-standards
+      - run: mv .tool-standards "$RUNNER_TEMP/tool-standards"
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Lint
+        run: '"$RUNNER_TEMP/tool-standards/gate/lint-gate.sh" "$GITHUB_WORKSPACE"'

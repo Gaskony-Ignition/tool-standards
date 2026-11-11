@@ -1,0 +1,3 @@
+S2 publicFn has no docstring
+S2 docstring summary of two runs past one line
+S2 Pump.start has no docstring

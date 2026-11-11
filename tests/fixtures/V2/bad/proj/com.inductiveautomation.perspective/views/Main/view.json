@@ -1,0 +1,55 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Go"
+        },
+        "props": {},
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\t# open the popup\n\ta = 1\n\tb = 2\n\n\tc = 3\n\td = 4\n\te = 5\n\tf = 6\n"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Value"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "property",
+              "config": {
+                "path": "view.custom.v"
+              },
+              "transforms": [
+                {
+                  "type": "script",
+                  "code": "\t# open the popup\n\ta = 1\n\tb = 2\n\n\tc = 3\n\td = 4\n\te = 5\n\tf = 6\n"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

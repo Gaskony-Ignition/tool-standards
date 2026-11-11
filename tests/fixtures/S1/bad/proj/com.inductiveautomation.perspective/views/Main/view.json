@@ -1,0 +1,32 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Go"
+        },
+        "props": {},
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "    system.perspective.print('x')\n"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Title"
+        },
+        "props": {}
+      },
+      {
+        "type": "ia.display.icon",
+        "meta": {
+          "name": "Label"
+        },
+        "props": {}
+      },
+      {
+        "type": "ia.display.view",
+        "meta": {
+          "name": "Detail"
+        },
+        "props": {
+          "path": "Other"
+        }
+      },
+      {
+        "type": "ia.container.flex",
+        "meta": {
+          "name": "Header"
+        },
+        "props": {}
+      }
+    ]
+  }
+}

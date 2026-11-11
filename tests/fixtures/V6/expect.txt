@@ -1,0 +1,2 @@
+V6 root/Copy props.text binds to ../Source.props.text
+V6 root/Deep props.text binds to /root/Panel/Source.props.value

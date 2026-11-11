@@ -1,0 +1,35 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Value"
+        },
+        "props": {
+          "style": {
+            "backgroundColor": "#ff0000",
+            "border": "1px solid #ccc"
+          }
+        }
+      },
+      {
+        "type": "ia.display.icon",
+        "meta": {
+          "name": "Alarm"
+        },
+        "props": {
+          "color": "rgba(0, 0, 0, 0.5)"
+        }
+      }
+    ]
+  }
+}

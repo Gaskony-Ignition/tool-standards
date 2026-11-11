@@ -1,0 +1,19 @@
+{
+  "name": "",
+  "tagType": "Provider",
+  "tags": [
+    {
+      "name": "My Folder",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Pump-1",
+          "tagType": "AtomicTag",
+          "valueSource": "memory",
+          "dataType": "Float8",
+          "engUnit": "kW"
+        }
+      ]
+    }
+  ]
+}

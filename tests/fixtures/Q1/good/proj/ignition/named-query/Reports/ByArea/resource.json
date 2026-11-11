@@ -1,0 +1,26 @@
+{
+  "scope": "DG",
+  "version": 2,
+  "restricted": false,
+  "overridable": true,
+  "files": [
+    "query.sql"
+  ],
+  "attributes": {
+    "type": "Query",
+    "enabled": true,
+    "database": "DB",
+    "parameters": [
+      {
+        "type": "Parameter",
+        "identifier": "area",
+        "sqlType": 7
+      },
+      {
+        "type": "Database",
+        "identifier": "database",
+        "sqlType": 7
+      }
+    ]
+  }
+}

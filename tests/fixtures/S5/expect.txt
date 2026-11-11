@@ -1,0 +1,4 @@
+S5 print in f
+S5 import system at module level
+S5 except X, e in f
+S5 print in root/Go onActionPerformed

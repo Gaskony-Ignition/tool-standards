@@ -1,0 +1,3 @@
+S3 module docstring over 5 lines
+S3 banner comment at module level
+S3 comment block over 3 lines at module level

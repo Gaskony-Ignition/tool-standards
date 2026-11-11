@@ -1,0 +1,21 @@
+{
+  "scope": "DG",
+  "version": 2,
+  "restricted": false,
+  "overridable": true,
+  "files": [
+    "query.sql"
+  ],
+  "attributes": {
+    "type": "Query",
+    "enabled": true,
+    "database": "DB",
+    "parameters": [
+      {
+        "type": "QueryString",
+        "identifier": "whereClause",
+        "sqlType": 7
+      }
+    ]
+  }
+}

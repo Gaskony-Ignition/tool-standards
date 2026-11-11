@@ -1,0 +1,38 @@
+{
+  "name": "",
+  "tagType": "Provider",
+  "tags": [
+    {
+      "name": "_types_",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Pump",
+          "tagType": "UdtType",
+          "tags": [
+            {
+              "name": "Run_Hours",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Float8",
+              "engUnit": "h"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Area_1",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Pump1",
+          "tagType": "AtomicTag",
+          "valueSource": "memory",
+          "dataType": "Float8",
+          "engUnit": "kW"
+        }
+      ]
+    }
+  ]
+}

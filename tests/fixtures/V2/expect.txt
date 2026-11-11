@@ -1,0 +1,2 @@
+V2 root/Go onActionPerformed is a long inline script
+V2 root/Value transform on props.text is a long inline script

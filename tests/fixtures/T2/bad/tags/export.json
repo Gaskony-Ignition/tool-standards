@@ -1,0 +1,42 @@
+{
+  "name": "",
+  "tagType": "Provider",
+  "tags": [
+    {
+      "name": "_types_",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Tank",
+          "tagType": "UdtType",
+          "tags": [
+            {
+              "name": "Level",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "Float8"
+            },
+            {
+              "name": "Name",
+              "tagType": "AtomicTag",
+              "valueSource": "memory",
+              "dataType": "String"
+            },
+            {
+              "name": "Io",
+              "tagType": "Folder",
+              "tags": [
+                {
+                  "name": "Raw",
+                  "tagType": "AtomicTag",
+                  "valueSource": "memory",
+                  "dataType": "Float4"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
