@@ -2,3 +2,8 @@ S4 history note "previously" in f
 S4 history note "we decided" in f
 S4 commented-out code in f
 S4 history note "FIX-12" at module level
+S4 history note "This used to" in g
+S4 history note "used to be" in g
+S4 history note "We never used to" in g
+S4 history note "at the time of writing" in h
+S4 history note "This file used to" in h

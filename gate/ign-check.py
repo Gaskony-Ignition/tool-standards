@@ -21,9 +21,14 @@ UNTRACKED = {"__pycache__", ".resources", ".DS_Store", "Thumbs.db"}
 # Floats only: integer members are mostly counts and states, which have no unit.
 ANALOGUE_TYPES = {"Float4", "Float8"}
 TAG_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*$")
+# "used to" only after a pronoun subject, an adverb, or before "be": after a noun it usually means
+# "used for" ("the key used to sign"), which a regex cannot tell from past habit.
 HISTORY = re.compile(
-    r"(?<![\w-])(?:(?<!\bis )(?<!\bare )(?<!\bbe )(?<!\bbeen )(?<!\bbeing )(?<!\bget )(?<!\bgets )"
-    r"used to|previously|before v\d|turned out|turns out|at the time|we did|we then|"
+    r"(?<![\w-])(?:(?:it|this|that|we|they|there|he|she|you|i|which|who"
+    r"|this\s+(?!(?:is|was|are|were|be|been|being|gets?|got)\b)[\w`-]+)\s+"
+    r"(?:never\s+|always\s+|once\s+|originally\s+)?used to|(?:never|always|once|originally)\s+used to"
+    r"|(?<!\bis )(?<!\bare )(?<!\bwas )(?<!\bwere )(?<!\bbe )(?<!\bbeen )(?<!\bbeing )(?<!\bget )(?<!\bgets )"
+    r"used to be|previously|before v\d|turned out|turns out|at the time of writing|we did|we then|"
     r"we decided|v\d+ did|verified \d\d?/\d\d?|as of \d\d?/\d\d?)\b|(?-i:\b(?:FIX|D)-\d+\b)",
     re.I)
 COLOUR_VALUE = re.compile(
