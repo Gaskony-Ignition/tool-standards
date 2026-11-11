@@ -1,0 +1,2 @@
+NamePatternRule root.root.scripts.messageHandlers[2]: Name 'Refresh_Data' doesn't follow
+lint-gate: FAIL - 1 new

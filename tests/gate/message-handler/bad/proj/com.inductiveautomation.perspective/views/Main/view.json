@@ -1,0 +1,81 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Save"
+        },
+        "props": {
+          "text": "Save"
+        },
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\tsystem.perspective.sendMessage(\"am-presence\", {}, \"session\")"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "scripts": {
+      "customMethods": [],
+      "extensionFunctions": null,
+      "messageHandlers": [
+        {
+          "messageType": "am-presence",
+          "pageScope": true,
+          "script": "\tself.custom.seen = True",
+          "sessionScope": true,
+          "viewScope": false
+        },
+        {
+          "messageType": "refreshData",
+          "pageScope": true,
+          "script": "\tself.custom.seen = False",
+          "sessionScope": false,
+          "viewScope": true
+        },
+        {
+          "messageType": "Refresh_Data",
+          "pageScope": true,
+          "script": "\tself.custom.seen = False",
+          "sessionScope": false,
+          "viewScope": true
+        },
+        {
+          "messageType": "presence",
+          "pageScope": true,
+          "script": "\tself.custom.seen = False",
+          "sessionScope": false,
+          "viewScope": true
+        }
+      ]
+    },
+    "custom": {
+      "seen": false
+    },
+    "propConfig": {
+      "props.style.opacity": {
+        "binding": {
+          "type": "expr",
+          "config": {
+            "expression": "if({this.custom.seen}, 1, 0.5)"
+          }
+        }
+      }
+    }
+  }
+}

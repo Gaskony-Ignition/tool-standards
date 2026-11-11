@@ -9,7 +9,7 @@
   },
   "_PollingIntervalRule": "A 1 s clock is fine; faster than that re-evaluates for nothing.",
   "PollingIntervalRule": {"enabled": true, "kwargs": {"minimum_interval": 1000}},
-  "_NamePatternRule": "Components PascalCase; properties, custom methods and message handlers camelCase. Its 'property' node is every prop and nested key, so baseline.py keeps only direct children of custom and params. Abbreviation detection is off: it rewrites 'click' as 'CLIck' and then fails it.",
+  "_NamePatternRule": "Components PascalCase; properties, custom methods and message handlers camelCase. Its 'property' node is every prop and nested key, so baseline.py keeps only direct children of custom and params. A message handler shared across projects may be kebab-case with a project prefix (am-presence). Abbreviation detection is off: it rewrites 'click' as 'CLIck' and then fails it.",
   "NamePatternRule": {"enabled": true, "kwargs": {
     "severity": "warning",
     "auto_detect_abbreviations": false,
@@ -17,7 +17,8 @@
       "component": {"convention": "PascalCase"},
       "property": {"convention": "camelCase"},
       "custom_method": {"convention": "camelCase"},
-      "message_handler": {"convention": "camelCase"}
+      "message_handler": {"convention": "camelCase", "pattern": "^(?:[a-z][a-zA-Z0-9]*|[a-z][a-z0-9]*(?:-[a-z0-9]+)+)$",
+                          "pattern_description": "camelCase, or kebab-case with a project prefix"}
     }
   }},
   "UnusedCustomPropertiesRule": {"enabled": true, "kwargs": {}},
