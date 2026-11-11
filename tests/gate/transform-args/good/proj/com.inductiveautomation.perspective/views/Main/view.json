@@ -1,0 +1,39 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Status"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "tag",
+              "config": {
+                "fallbackDelay": 2.5,
+                "mode": "direct",
+                "tagPath": "[System]Gateway/CurrentDateTime"
+              },
+              "transforms": [
+                {
+                  "type": "script",
+                  "code": "\tif not quality.isGood():\n\t\treturn \"bad\"\n\treturn \"%s at %s\" % (value, timestamp)"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  }
+}

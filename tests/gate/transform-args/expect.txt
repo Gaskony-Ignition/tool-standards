@@ -1,0 +1,3 @@
+PylintScriptRule root.root.children[0].Save.events.component.onActionPerformed: Line 2: Undefined variable 'quality'
+PylintScriptRule root.root.children[1].Status.propConfig.props.text.binding.transforms[0]: Line 2: Undefined variable 'stamp'
+lint-gate: FAIL - 2 new

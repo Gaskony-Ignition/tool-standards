@@ -22,6 +22,10 @@ STYLE_CATEGORIES = "WC"
 # ign-lint's PROPERTY node covers every prop and nested key; the standard names only
 # direct children of custom and params.
 NAMED_PROPERTY = re.compile(r"(^|\.)(custom|params)\.[^.\[]+$")
+# Perspective calls a script transform as transform(self, value, quality, timestamp);
+# ign-lint 0.6.4 wraps it as transform(self, value), so pylint calls the other two undefined.
+TRANSFORM_ARG = re.compile(r"^\S+\.binding\.transforms\[\d+\]: Line \d+: "
+                           r"Undefined variable '(quality|timestamp)' \(undefined-variable\)")
 
 Finding = collections.namedtuple("Finding", "source rule file line message severity raw ids")
 
@@ -62,7 +66,9 @@ def parse_ign_lint(repo, text):
             rule = s[:-1]
         elif s.startswith("• ") and rule and path:
             msg = s[2:]
-            sym = re.search(r"\(([a-z-]+)\) \(([A-Z])\d+\)$", msg)
+            if rule == "PylintScriptRule" and TRANSFORM_ARG.match(msg):
+                continue
+            sym =re.search(r"\(([a-z-]+)\) \(([A-Z])\d+\)$", msg)
             ids = [rule] + ([sym.group(1)] if sym else [])
             if rule == "NamePatternRule":
                 if "for property" in msg and not NAMED_PROPERTY.search(msg.split(":", 1)[0]):
