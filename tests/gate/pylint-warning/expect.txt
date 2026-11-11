@@ -1,0 +1,3 @@
+unused-variable Unused variable 'count'
+unused-variable root.root.children[0].Save.events.component.onActionPerformed: Line 2: Unused variable 'pages'
+lint-gate: FAIL - 2 new

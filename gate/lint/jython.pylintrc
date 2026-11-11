@@ -4,7 +4,8 @@
 # pylint cannot otherwise see.
 #
 # Real faults, plus camelCase names for functions, methods and arguments
-# (invalid-name, a style finding the baseline can hold). Pylint parses
+# (invalid-name). E and F messages always fail the gate; the W and C
+# messages enabled here are style findings the baseline can hold. Pylint parses
 # with Python 3, so Jython-only syntax (`except X, e`, print statements) is a
 # syntax error here: write the form both accept (`except X as e`).
 

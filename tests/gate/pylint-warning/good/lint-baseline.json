@@ -1,0 +1,4 @@
+[
+  {"rule": "unused-variable", "file": "proj/com.inductiveautomation.perspective/views/Main/view.json", "message": "root.root.children[].Save.events.component.onActionPerformed: Line: Unused variable 'pages' (unused-variable) (W0612)"},
+  {"rule": "unused-variable", "file": "proj/ignition/script-python/pkg/mod/code.py", "message": "Unused variable 'count'"}
+]

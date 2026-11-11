@@ -17,7 +17,8 @@ import sys
 PRUNE = {"node_modules", "dist", "build", ".git", ".ignition-lint"}
 PYLINT = re.compile(r"^(.+?):(\d+):\d+: ([EFWCRI])\d+: (.*) \(([a-z-]+)\)$")
 IGN_CHECK = re.compile(r"^(.+?):(\d+): (\S+) (.*)$")
-STYLE_SYMBOLS = {"invalid-name"}
+# Every W and C message the pylintrc enables is a style finding the baseline can hold.
+STYLE_CATEGORIES = "WC"
 # ign-lint's PROPERTY node covers every prop and nested key; the standard names only
 # direct children of custom and params.
 NAMED_PROPERTY = re.compile(r"(^|\.)(custom|params)\.[^.\[]+$")
@@ -61,13 +62,13 @@ def parse_ign_lint(repo, text):
             rule = s[:-1]
         elif s.startswith("• ") and rule and path:
             msg = s[2:]
-            sym = re.search(r"\(([a-z-]+)\) \([A-Z]\d+\)$", msg)
+            sym = re.search(r"\(([a-z-]+)\) \(([A-Z])\d+\)$", msg)
             ids = [rule] + ([sym.group(1)] if sym else [])
             if rule == "NamePatternRule":
                 if "for property" in msg and not NAMED_PROPERTY.search(msg.split(":", 1)[0]):
                     continue
                 severity = "style"
-            elif sym and sym.group(1) in STYLE_SYMBOLS:
+            elif sym and sym.group(2) in STYLE_CATEGORIES:
                 severity = "style"
             else:
                 severity = section
@@ -84,7 +85,7 @@ def parse_pylint(repo, text):
         if not m:
             continue
         path, n, cat, msg, sym = m.groups()
-        severity = "error" if cat in "EF" else "style" if sym in STYLE_SYMBOLS else "warning"
+        severity = "error" if cat in "EF" else "style" if cat in STYLE_CATEGORIES else "warning"
         out.append(Finding("pylint", sym, os.path.relpath(os.path.abspath(path), repo), int(n), msg, severity, line.strip(), [sym]))
     return out
 

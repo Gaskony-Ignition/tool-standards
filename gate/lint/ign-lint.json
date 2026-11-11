@@ -1,5 +1,5 @@
 {
-  "_comment": "lint-gate.sh config for ign-lint (bw-design-group/ignition-lint). Errors fail the gate; warnings print only; NamePatternRule findings are style and fail unless baselined. The gate fills in PylintScriptRule's pylintrc.",
+  "_comment": "lint-gate.sh config for ign-lint (bw-design-group/ignition-lint). Errors fail the gate; warnings print only; NamePatternRule findings and pylint W and C messages are style and fail unless baselined. The gate fills in PylintScriptRule's pylintrc.",
   "PylintScriptRule": {
     "enabled": true,
     "kwargs": {
