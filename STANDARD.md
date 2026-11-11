@@ -35,7 +35,9 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Rule | Why | Check |
 | --- | --- | --- |
 | Use the most direct binding that works: tag, indirect tag, expression, then script. | Simpler bindings are easier to read and cheaper to run. | review |
-| No `runScript()` or `tag()` in an expression. | Hides logic and dependencies in a string. | V3 |
+| A binding never polls a script: `runScript` only as `runScript("pkg.mod.fn", 0, args)`, and `now()` with a rate never feeds a script transform. | A polled script runs per component, per session, on the session's worker threads. | V3 |
+| A value that is the same for every session comes from a tag: Alarm Metrics, or a tag a gateway timer writes. | Computed once for everyone. | review |
+| No `tag()` in an expression; use an indirect tag binding. | The path and its subscription are visible. | V3 |
 | A script transform calls one library function. | Keeps logic in the library. | V2 |
 | No `now()` poll faster than 1000 ms. | Each tick re-evaluates the binding. | PollingIntervalRule |
 
@@ -117,7 +119,7 @@ def writeSetpoint(path, sp):
 Published guidance splits on these. This is what the standard chose.
 
 1. Component type prefixes like `btn`: IA's Exchange style guide tolerates them, forum regulars reject them. We name by purpose with no prefix.
-2. Script transform versus `runScript`: there is no published benchmark. We ban `runScript` and limit script transforms to a one-line library call.
+2. Script transform versus `runScript`: IA staff and forum benchmarks disagree on which is cheaper. We ban polling a script from a binding in either form, and allow `runScript` at poll rate 0.
 3. The three-level embedded view limit comes from ICC table-talk notes, not IA documentation.
 
 ## Sources
