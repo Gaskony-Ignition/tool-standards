@@ -12,3 +12,10 @@ def two():
 class Pump(object):
 	def start(self):
 		return 1
+
+
+def run():
+	class Task(Runnable):
+		def run(self):
+			pass
+	return Task()

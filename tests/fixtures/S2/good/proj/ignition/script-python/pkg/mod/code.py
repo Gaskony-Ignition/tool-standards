@@ -22,3 +22,29 @@ class Pump(object):
 		def inner():
 			return 1
 		return inner()
+
+
+def start():
+	"""Start a background task."""
+	class Task(Runnable):
+		def run(self):
+			pass
+
+		def start(self):
+			pass
+	return Task()
+
+
+def make():
+	"""Return a counter."""
+	def make():
+		return 1
+	return make
+
+
+class Holder(object):
+	"""Holds a callback."""
+
+	class Inner(object):
+		def go(self):
+			pass

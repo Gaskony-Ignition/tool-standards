@@ -126,6 +126,7 @@ def owners(lines):
             stack.pop()
         m = re.match(r"(?:async\s+)?(def|class)\s+(\w+)", lg.masked)
         if m:
+            lg.scope = tuple(kind for _, kind, _ in stack)
             stack.append((lg.width, m.group(1), m.group(2)))
         out.append((lg, owner_name(stack)))
     return out
@@ -359,14 +360,12 @@ def check_s1(repo):
 
 
 def check_s2(repo):
-    """Public function or method with no docstring, or a summary over one line."""
+    """Public module-level function or method of a module-level class with no docstring, or a long summary."""
     for f in repo.code_files():
         pairs, _ = repo.lexed(f)
         for k, (lg, owner) in enumerate(pairs):
             m = re.match(r"(?:async\s+)?def\s+(\w+)", lg.masked)
-            if not m or m.group(1).startswith("_") or owner is None:
-                continue
-            if owner != m.group(1) and owner.split(".")[-1] != m.group(1):
+            if not m or m.group(1).startswith("_") or lg.scope not in ((), ("class",)):
                 continue
             nxt = pairs[k + 1][0] if k + 1 < len(pairs) else None
             if not nxt or nxt.width <= lg.width or not nxt.only_strings:
