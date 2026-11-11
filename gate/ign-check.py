@@ -525,8 +525,39 @@ def check_v3(repo):
                     yield repo.rel(path), 1, "V3", "%s on %s %s" % (problem, cpath, key)
 
 
+def split_vars(text):
+    """Text with every var() call removed, and the fallback text of each of those calls."""
+    rest, fallbacks, i = [], [], 0
+    for m in re.finditer(r"var\(", text, re.I):
+        if m.start() < i:
+            continue
+        depth, comma, j = 0, None, m.end() - 1
+        while j < len(text):
+            if text[j] == "(":
+                depth += 1
+            elif text[j] == ")":
+                depth -= 1
+                if depth == 0:
+                    break
+            elif text[j] == "," and depth == 1 and comma is None:
+                comma = j
+            j += 1
+        rest.append(text[i:m.start()])
+        if comma is not None:
+            fallbacks.append(text[comma + 1:j])
+        i = j + 1
+    rest.append(text[i:])
+    return "".join(rest), fallbacks
+
+
+def has_colour(text):
+    """True when CSS text holds a literal colour, var() fallbacks included."""
+    rest, fallbacks = split_vars(text)
+    return bool(COLOUR_VALUE.match(rest) or COLOUR_IN_CSS.search(rest)) or any(map(has_colour, fallbacks))
+
+
 def colour_paths(node, keypath):
-    """Key paths under a props style whose value holds a literal colour."""
+    """(key path, what) under a props style whose value holds a literal colour."""
     if isinstance(node, dict):
         for k, v in node.items():
             if k not in ("params", "instances"):
@@ -535,17 +566,48 @@ def colour_paths(node, keypath):
         for v in node:
             yield from colour_paths(v, keypath + "[]")
     # Style only: chart and symbol props hold colours the component writes itself.
-    elif isinstance(node, str) and ".style." in keypath + "." and not node.lstrip().startswith("var("):
-        if COLOUR_VALUE.match(node) or COLOUR_IN_CSS.search(re.sub(r"var\([^)]*\)", "", node)):
-            yield keypath
+    elif isinstance(node, str) and ".style." in keypath + ".":
+        rest, fallbacks = split_vars(node)
+        if COLOUR_VALUE.match(rest) or COLOUR_IN_CSS.search(rest):
+            yield keypath, "literal colour"
+        elif any(map(has_colour, fallbacks)):
+            yield keypath, "literal colour in a var() fallback"
+
+
+def css_variable_findings(repo):
+    """var(--name) in a view that no listed stylesheet, view or prefix in lint.json cssVariables defines."""
+    cfg = (repo.json(os.path.join(repo.root, "lint.json")) or {}).get("cssVariables")
+    if not isinstance(cfg, dict):
+        return
+    defined, views = set(), []
+    for name in cfg.get("stylesheets") or []:
+        try:
+            with open(os.path.join(repo.root, name), encoding="utf-8") as fh:
+                defined.update(re.findall(r"(--[\w-]+)\s*:", fh.read()))
+        except OSError:
+            yield "lint.json", 1, "V4", "cssVariables stylesheet not found: %s" % name
+    for path, _ in repo.views():
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        defined.update(re.findall(r'"(--[\w-]+)"\s*:', text))
+        views.append((path, text))
+    prefixes = tuple(cfg.get("prefixes") or [])
+    for path, text in views:
+        seen = set()
+        for n, line in enumerate(text.splitlines(), 1):
+            for name in re.findall(r"var\(\s*(--[\w-]+)", line):
+                if name not in defined and not (prefixes and name.startswith(prefixes)) and name not in seen:
+                    seen.add(name)
+                    yield repo.rel(path), n, "V4", "undefined CSS variable %s" % name
 
 
 def check_v4(repo):
-    """Literal colour in a component's props."""
+    """Literal colour in a component's props; with lint.json cssVariables, an undefined CSS variable."""
     for path, view in repo.views():
         for cpath, comp in parts(view)[1:]:
-            for keypath in sorted(set(colour_paths(comp.get("props") or {}, "props"))):
-                yield repo.rel(path), 1, "V4", "literal colour at %s %s" % (cpath, keypath)
+            for keypath, what in sorted(set(colour_paths(comp.get("props") or {}, "props"))):
+                yield repo.rel(path), 1, "V4", "%s at %s %s" % (what, cpath, keypath)
+    yield from css_variable_findings(repo)
 
 
 def embeds(comp):
@@ -758,7 +820,7 @@ RULES = {
     "V1": ("component left with the Designer's default name", check_v1),
     "V2": ("inline view script over 5 statement lines", check_v2),
     "V3": ("binding that polls a script, or tag() in an expression", check_v3),
-    "V4": ("literal colour in component props", check_v4),
+    "V4": ("literal colour in component props or a var() fallback; undefined CSS variable when configured", check_v4),
     "V5": ("chain of embedded views more than 3 deep", check_v5),
     "V6": ("property binding that reads another component's props", check_v6),
     "T1": ("tag, folder, UDT or member name that is not an identifier", check_t1),

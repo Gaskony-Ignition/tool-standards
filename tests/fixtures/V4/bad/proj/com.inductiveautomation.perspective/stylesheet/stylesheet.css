@@ -1,0 +1,5 @@
+html { color-scheme: dark; }
+:root {
+	--psc-accent: #2b6cb0;
+	--psc-border: #ccc;
+}

@@ -1,0 +1,44 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Value"
+        },
+        "props": {
+          "text": "var(--psc-local)",
+          "style": {
+            "backgroundColor": "var(--neutral-10)",
+            "border": "1px solid var(--psc-border)",
+            "color": "var( --callToAction)",
+            "--psc-local": "var(--psc-accent)"
+          }
+        },
+        "custom": {
+          "tint": "#ff0000"
+        }
+      },
+      {
+        "type": "ia.display.view",
+        "meta": {
+          "name": "Detail"
+        },
+        "props": {
+          "path": "Other",
+          "params": {
+            "colour": "#00ff00"
+          }
+        }
+      }
+    ]
+  }
+}

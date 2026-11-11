@@ -29,6 +29,19 @@
         "props": {
           "color": "rgba(0, 0, 0, 0.5)"
         }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "Fallback"
+        },
+        "props": {
+          "style": {
+            "color": "var(--psc-text, #fff)",
+            "backgroundColor": "var(--psc-fill, var(--neutral-20, rgba(0, 0, 0, 0.5)))",
+            "borderColor": "var(--psc-acent)"
+          }
+        }
       }
     ]
   }

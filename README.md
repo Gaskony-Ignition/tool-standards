@@ -42,6 +42,7 @@ lint-gate: FAIL - 2 new, 41 baseline, 1 excepted
    ```
 
 4. To accept a finding, add an exception to the repo's `lint.json` with `file`, `rule`, `match` and `reason`.
+5. To have V4 report a `var(--name)` that nothing defines, add `"cssVariables": {"stylesheets": [...], "prefixes": [...]}` to `lint.json`: stylesheet paths from the repo root, and the prefixes of theme variables the gateway supplies, such as `--neutral-`.
 
 ## Licence
 

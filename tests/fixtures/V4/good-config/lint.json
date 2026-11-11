@@ -1,0 +1,6 @@
+{
+  "cssVariables": {
+    "stylesheets": ["proj/com.inductiveautomation.perspective/stylesheet/stylesheet.css"],
+    "prefixes": ["--neutral-", "--callToAction"]
+  }
+}

@@ -1,2 +1,7 @@
 V4 literal colour at root/Value props.style.backgroundColor
 V4 literal colour at root/Value props.style.border
+V4 literal colour in a var() fallback at root/Fallback props.style.color
+V4 literal colour in a var() fallback at root/Fallback props.style.backgroundColor
+V4 undefined CSS variable --psc-acent
+V4 undefined CSS variable --psc-text
+V4 cssVariables stylesheet not found: proj/missing.css
