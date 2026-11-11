@@ -1,2 +1,6 @@
-UnusedCustomPropertiesRule params.areaId: view parameter 'areaId' is defined but never referenced
-lint-gate: FAIL - 1 new
+UnusedCustomPropertiesRule params.zoneId: view parameter 'zoneId' is defined but never referenced
+UnusedCustomPropertiesRule params.mode: view parameter 'mode' is defined but never referenced
+UnusedCustomPropertiesRule params.note: view parameter 'note' is defined but never referenced
+UnusedCustomPropertiesRule params.spare: view parameter 'spare' is defined but never referenced
+UnusedCustomPropertiesRule params.shiftId: view parameter 'shiftId' is defined but never referenced
+lint-gate: FAIL - 5 new

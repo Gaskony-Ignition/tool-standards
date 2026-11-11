@@ -1,8 +1,12 @@
 {
-  "custom": {},
+  "custom": {
+    "last": "",
+    "filter": {
+      "a": 1
+    }
+  },
   "params": {
-    "areaId": "",
-    "lineId": ""
+    "areaId": ""
   },
   "props": {},
   "root": {
@@ -26,27 +30,7 @@
               "type": "script",
               "scope": "G",
               "config": {
-                "script": "\tpkg.mod.save(self, event)"
-              }
-            }
-          }
-        }
-      },
-      {
-        "type": "ia.input.button",
-        "meta": {
-          "name": "Load"
-        },
-        "props": {
-          "text": "Load"
-        },
-        "events": {
-          "component": {
-            "onActionPerformed": {
-              "type": "script",
-              "scope": "G",
-              "config": {
-                "script": "\tpkg.mod.load(self.view.params.lineId)"
+                "script": "\tpkg.mod.save(self)"
               }
             }
           }
@@ -56,9 +40,6 @@
   },
   "propConfig": {
     "params.areaId": {
-      "paramDirection": "input"
-    },
-    "params.lineId": {
       "paramDirection": "input"
     }
   }

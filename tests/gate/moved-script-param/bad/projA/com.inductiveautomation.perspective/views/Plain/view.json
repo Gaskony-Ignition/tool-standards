@@ -1,0 +1,41 @@
+{
+  "custom": {},
+  "params": {
+    "shiftId": ""
+  },
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Shift"
+        },
+        "props": {
+          "text": "Shift"
+        },
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\tsystem.perspective.print(\"shift\")"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "propConfig": {
+    "params.shiftId": {
+      "paramDirection": "input"
+    }
+  }
+}

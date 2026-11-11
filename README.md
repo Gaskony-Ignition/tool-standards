@@ -42,7 +42,7 @@ lint-gate: FAIL - 2 new, 41 baseline, 1 excepted
    ```
 
 4. To accept a finding, add an exception to the repo's `lint.json` with `file`, `rule`, `match` and `reason`.
-   When a moved script's library function reads a view param through the component it is passed, ign-lint reports the param as unused. Pass the param as a call argument instead, or add `{"file": "views/Main/view.json", "rule": "UnusedCustomPropertiesRule", "match": "params.areaId:", "reason": "read by pkg.mod.save"}`.
+   ign-lint does not look into the script library; the gate drops its unused-property finding when the view calls the same project's library and a `code.py` there reads `.params.areaId` (or `.custom.areaId`, `.params["areaId"]`). A property read any other way needs an exception such as `{"file": "views/Main/view.json", "rule": "UnusedCustomPropertiesRule", "match": "params.areaId:", "reason": "read by pkg.mod.save"}`.
 5. To have V4 report a `var(--name)` that nothing defines, add `"cssVariables": {"stylesheets": [...], "prefixes": [...]}` to `lint.json`: stylesheet paths from the repo root, and the prefixes of theme variables the gateway supplies, such as `--neutral-`.
 
 ## Licence

@@ -8,11 +8,14 @@ finding is an error (gates, never baselined), a warning (prints only) or style
 
 Usage: baseline.py <repo> <output-dir> [--write-baseline]     Exit: 0 pass, 1 fail.
 """
+import ast
 import collections
+import io
 import json
 import os
 import re
 import sys
+import tokenize
 
 PRUNE = {"node_modules", "dist", "build", ".git", ".ignition-lint"}
 PYLINT = re.compile(r"^(.+?):(\d+):\d+: ([EFWCRI])\d+: (.*) \(([a-z-]+)\)$")
@@ -26,6 +29,11 @@ NAMED_PROPERTY = re.compile(r"(^|\.)(custom|params)\.[^.\[]+$")
 # ign-lint 0.6.4 wraps it as transform(self, value), so pylint calls the other two undefined.
 TRANSFORM_ARG = re.compile(r"^\S+\.binding\.transforms\[\d+\]: Line \d+: "
                            r"Undefined variable '(quality|timestamp)' \(undefined-variable\)")
+UNUSED_PROPERTY = re.compile(r"^\S.*: (view parameter|custom property) '([^']+)' is defined but never referenced")
+PERSPECTIVE = "com.inductiveautomation.perspective/"
+NOISE = {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER}
+# Used when a script does not tokenize: the same reads and calls, comments and strings included.
+RAW_ACCESS = re.compile(r"\.\s*(custom|params)\s*(?:\.\s*(\w+)|\[\s*[uU]?(['\"])(\w+)\3\s*\])")
 
 Finding = collections.namedtuple("Finding", "source rule file line message severity raw ids")
 
@@ -49,9 +57,105 @@ def find_line(repo, file, message):
     return 1
 
 
+def tokens(text):
+    """(type, text) of each token of Python source but comments and layout, or None when it does not tokenize."""
+    try:
+        return [(t.type, t.string) for t in tokenize.generate_tokens(io.StringIO(text).readline)
+                if t.type not in NOISE]
+    except (tokenize.TokenError, SyntaxError):
+        return None
+
+
+def accesses(text):
+    """(custom|params, name) for each .custom.<name>, .params.<name> or .params["<name>"] in source."""
+    toks = tokens(text)
+    if toks is None:
+        return {(m.group(1), m.group(2) or m.group(4)) for m in RAW_ACCESS.finditer(text)}
+    out = set()
+    for i in range(len(toks) - 3):
+        if toks[i][1] != "." or toks[i + 1][1] not in ("custom", "params") or toks[i + 1][0] != tokenize.NAME:
+            continue
+        nxt = toks[i + 2:i + 5]
+        if nxt[0][1] == "." and nxt[1][0] == tokenize.NAME:
+            out.add((toks[i + 1][1], nxt[1][1]))
+        elif nxt[0][1] == "[" and nxt[1][0] == tokenize.STRING and len(nxt) > 2 and nxt[2][1] == "]":
+            try:
+                name = ast.literal_eval(nxt[1][1])
+            except (ValueError, SyntaxError):
+                continue
+            if isinstance(name, str):
+                out.add((toks[i + 1][1], name))
+    return out
+
+
+def calls_package(text, packages):
+    """True when source calls a function of one of the script packages: pkg.mod.fn(...)."""
+    toks = tokens(text)
+    if toks is None:
+        names = "|".join(re.escape(p) for p in packages)
+        return bool(names and re.search(r"(?<![\w.])(?:%s)(?:\s*\.\s*\w+)+\s*\(" % names, text))
+    for i, (kind, word) in enumerate(toks):
+        if kind != tokenize.NAME or word not in packages or (i and toks[i - 1][1] == "."):
+            continue
+        j = i + 1
+        while j + 1 < len(toks) and toks[j][1] == "." and toks[j + 1][0] == tokenize.NAME:
+            j += 2
+        if j > i + 1 and j < len(toks) and toks[j][1] == "(":
+            return True
+    return False
+
+
+def view_scripts(node):
+    """Every script in a view: event handlers, custom methods, message handlers, onChange and transforms."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if isinstance(v, str) and (k == "script" or (k == "code" and node.get("type") == "script")):
+                yield v
+            else:
+                yield from view_scripts(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from view_scripts(v)
+
+
+def read_by_library(repo, file, message, cache):
+    """True when the project's script library reads the unused property by name and the view calls that library.
+
+    The project is the folder above com.inductiveautomation.perspective/; its library is
+    ignition/script-python/ in the same folder, so projects side by side in one repo stay apart.
+    """
+    m = UNUSED_PROPERTY.match(message)
+    if not m or "/" + PERSPECTIVE not in "/" + file:
+        return False
+    want = ("params" if m.group(1) == "view parameter" else "custom", m.group(2))
+    project = ("/" + file).split("/" + PERSPECTIVE, 1)[0].lstrip("/")
+    if project not in cache:
+        lib = os.path.join(repo, project, "ignition", "script-python")
+        packages, read = set(), set()
+        for root, dirs, files in os.walk(lib):
+            dirs[:] = sorted(d for d in dirs if d not in PRUNE)
+            if root == lib:
+                packages.update(dirs)
+            if "code.py" in files:
+                with open(os.path.join(root, "code.py"), encoding="utf-8", errors="replace") as fh:
+                    read |= accesses(fh.read())
+        cache[project] = (packages, read)
+    packages, read = cache[project]
+    if want not in read:
+        return False
+    if file not in cache:
+        try:
+            with open(os.path.join(repo, file), encoding="utf-8") as fh:
+                view = json.load(fh)
+        except (OSError, ValueError):
+            view = {}
+        cache[file] = any(calls_package(s, packages) for s in view_scripts(view))
+    return cache[file]
+
+
 def parse_ign_lint(repo, text):
     """Findings from ign-lint's console report."""
-    out, path, section, rule, expect_path = [], None, None, None, False
+    out, path, section, rule, expect_path, cache = [], None, None, None, False, {}
     for line in text.splitlines():
         s = line.strip()
         if expect_path:
@@ -67,6 +171,9 @@ def parse_ign_lint(repo, text):
         elif s.startswith("• ") and rule and path:
             msg = s[2:]
             if rule == "PylintScriptRule" and TRANSFORM_ARG.match(msg):
+                continue
+            # ign-lint 0.6.4 does not look into the script library, where rule V2 sends a view's logic.
+            if rule == "UnusedCustomPropertiesRule" and read_by_library(repo, path, msg, cache):
                 continue
             sym =re.search(r"\(([a-z-]+)\) \(([A-Z])\d+\)$", msg)
             ids = [rule] + ([sym.group(1)] if sym else [])
