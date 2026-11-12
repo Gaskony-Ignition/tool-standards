@@ -48,6 +48,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Colours come from style classes and theme variables, never a literal in a view. | A theme change reaches every view. | V4 |
 | Style class names lowercase-with-dashes under the project's prefix. | Classes from different projects do not collide. | review |
 | The project stylesheet declares `html { color-scheme: dark }` or `light`. | Without it Chrome's auto dark mode repaints SVG fills. | color-scheme |
+| A project follows the session's selected theme and reads well in each: it does not fix a palette or override theme variables. A project with a fixed look is a written exception and carries no theme selector. | A selector that changes nothing looks broken, and themes are the gateway's one place to set the look. | review |
 
 ## Tags and UDTs
 
@@ -73,6 +74,8 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Every file in a resource folder is declared in its `resource.json`, and nothing declared is missing. | An undeclared file is undefined behaviour at import. | P1 |
 | `.resources/` is gitignored; a `resource.json` is committed with the file it describes. | Generated state stays out of git. | review |
 | Gateway event scripts, alarm pipelines and other runnable resources live in leaf projects, never an inheritable parent. | They would run once per child. | review |
+| Every gateway resource a project creates is named the project name plus a type suffix: tag provider `<Project>_Tags`, database connection `<Project>_DB`, user source `<Project>_Users`; a second one of a kind puts a purpose word before the suffix (`<Project>_History_DB`). | Whoever administers the gateway can see what belongs to which project, and what is safe to delete. | review |
+| A project's Setup creates the resources it needs and never deletes, renames or migrates one it did not just create. | Deleting is the administrator's decision. | review |
 | No passwords, tokens or keys in scripts, queries or properties. | They end up in git history. | review |
 
 ## Comments
