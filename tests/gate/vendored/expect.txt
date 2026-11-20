@@ -1,0 +1,2 @@
+unused-variable Unused variable 'count'
+lint-gate: FAIL - 2 new, 0 baseline

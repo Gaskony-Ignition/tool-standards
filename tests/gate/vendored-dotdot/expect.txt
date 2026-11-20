@@ -1,0 +1,1 @@
+lint-gate: FAIL - lint.json vendored: ../elsewhere must be a folder inside the repo
