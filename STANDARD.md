@@ -35,7 +35,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Rule | Why | Check |
 | --- | --- | --- |
 | Use the most direct binding that works: tag, indirect tag, expression, then script. | Simpler bindings are easier to read and cheaper to run. | review |
-| A binding never polls a script: `runScript` only as `runScript("pkg.mod.fn", 0, args)`, and `now()` with a rate never feeds a script transform. | A polled script runs per component, per session, on the session's worker threads. | V3 |
+| A binding never polls a script: `runScript` only as `runScript("pkg.mod.fn", 0, args)`, `now()` with a rate never feeds a script transform, and no `runScript` argument is a property that a `now()` poll drives (a tick property included). | A polled script runs per component, per session, on the session's worker threads. | V3 |
 | A value that is the same for every session comes from a tag: an expression tag (`isAlarmActive()` for alarm counts and priority), or a memory tag a gateway timer writes. | Computed once for everyone. | review |
 | No `tag()` in an expression; use an indirect tag binding. | The path and its subscription are visible. | V3 |
 | A script transform calls one library function. | Keeps logic in the library. | V2 |
