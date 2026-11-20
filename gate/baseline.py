@@ -17,7 +17,7 @@ import re
 import sys
 import tokenize
 
-PRUNE = {"node_modules", "dist", "build", ".git", ".ignition-lint"}
+PRUNE = {"node_modules", "dist", "build", ".git", ".ignition-lint", ".claude"}
 PYLINT = re.compile(r"^(.+?):(\d+):\d+: ([EFWCRI])\d+: (.*) \(([a-z-]+)\)$")
 IGN_CHECK = re.compile(r"^(.+?):(\d+): (\S+) (.*)$")
 # Every W and C message the pylintrc enables is a style finding the baseline can hold.

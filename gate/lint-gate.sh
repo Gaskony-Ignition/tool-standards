@@ -26,7 +26,7 @@ here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 command -v uvx >/dev/null || { echo "lint-gate: uvx not found (install uv)" >&2; exit 2; }
 
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-prune=(-name node_modules -o -name dist -o -name build -o -name .git -o -name .ignition-lint)
+prune=(-name node_modules -o -name dist -o -name build -o -name .git -o -name .ignition-lint -o -name .claude)
 mapfile -d '' views < <(find "$repo" \( "${prune[@]}" \) -prune -o -name view.json -print0)
 mapfile -d '' code < <(find "$repo" \( "${prune[@]}" \) -prune -o -path '*/script-python/*/code.py' -print0)
 
