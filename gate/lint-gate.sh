@@ -26,9 +26,13 @@ here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 command -v uvx >/dev/null || { echo "lint-gate: uvx not found (install uv)" >&2; exit 2; }
 
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+python3 "$here/vendored.py" "$repo" "$tmp/vendored.txt" || exit 1
 prune=(-name node_modules -o -name dist -o -name build -o -name .git -o -name .ignition-lint -o -name .claude)
-mapfile -d '' views < <(find "$repo" \( "${prune[@]}" \) -prune -o -name view.json -print0)
-mapfile -d '' code < <(find "$repo" \( "${prune[@]}" \) -prune -o -path '*/script-python/*/code.py' -print0)
+# Vendored folders are not linted, but their script packages are still declared below.
+vprune=("${prune[@]}")
+while IFS= read -r v; do vprune+=(-o -path "$v"); done < "$tmp/vendored.txt"
+mapfile -d '' views < <(find "$repo" \( "${vprune[@]}" \) -prune -o -name view.json -print0)
+mapfile -d '' code < <(find "$repo" \( "${vprune[@]}" \) -prune -o -path '*/script-python/*/code.py' -print0)
 
 # Script packages and Jython 2 builtins are declared as builtins so pylint does not call them undefined.
 pkgs=$(find "$repo" \( "${prune[@]}" \) -prune -o -type d -path '*/script-python/*' -print \
