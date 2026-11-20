@@ -241,8 +241,11 @@ class Repo:
     def __init__(self, root):
         self.root = root
         self.files, self.dirs = [], []
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import vendored
+        skip = {p for p, _ in vendored.load(root)}
         for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = sorted(d for d in dirnames if d not in PRUNE)
+            dirnames[:] = sorted(d for d in dirnames if d not in PRUNE and os.path.join(dirpath, d) not in skip)
             self.dirs.append((dirpath, dirnames, filenames))
             self.files.extend(os.path.join(dirpath, f) for f in sorted(filenames))
         self._json, self._lex = {}, {}

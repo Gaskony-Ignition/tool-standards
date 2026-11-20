@@ -17,6 +17,9 @@ import re
 import sys
 import tokenize
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import vendored  # noqa: E402
+
 PRUNE = {"node_modules", "dist", "build", ".git", ".ignition-lint", ".claude"}
 PYLINT = re.compile(r"^(.+?):(\d+):\d+: ([EFWCRI])\d+: (.*) \(([a-z-]+)\)$")
 IGN_CHECK = re.compile(r"^(.+?):(\d+): (\S+) (.*)$")
@@ -218,11 +221,11 @@ def parse_ign_check(text):
     return out, bad
 
 
-def color_scheme(repo):
+def color_scheme(repo, skip):
     """Parentless Perspective projects whose stylesheet declares no html { color-scheme }."""
     out = []
     for root, dirs, _ in os.walk(repo):
-        dirs[:] = sorted(d for d in dirs if d not in PRUNE)
+        dirs[:] = sorted(d for d in dirs if d not in PRUNE and os.path.join(root, d) not in skip)
         if os.path.basename(root) != "com.inductiveautomation.perspective":
             continue
         proj = os.path.dirname(root)
@@ -292,7 +295,11 @@ def main():
         p = os.path.join(outdir, name)
         return open(p, encoding="utf-8").read() if os.path.exists(p) else ""
 
-    findings = color_scheme(repo) + parse_ign_lint(repo, read("ign-lint.txt")) + parse_pylint(repo, read("pylint.txt"))
+    try:
+        skip = {p for p, _ in vendored.load(repo)}
+    except (ValueError, OSError) as err:
+        sys.exit("lint-gate: FAIL - %s" % err)
+    findings = color_scheme(repo, skip) + parse_ign_lint(repo, read("ign-lint.txt")) + parse_pylint(repo, read("pylint.txt"))
     checked, bad = parse_ign_check(read("ign-check.txt"))
     findings += checked
     for line in bad:
