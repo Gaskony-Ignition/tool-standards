@@ -1,0 +1,2 @@
+lint-gate: vendored src/ia skipped, 6 files - IA's Solar Public Demo as downloaded (MIT); changed only at build time
+lint-gate: pass - 0 new, 0 baseline, 0 excepted

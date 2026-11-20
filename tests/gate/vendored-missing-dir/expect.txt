@@ -1,0 +1,1 @@
+lint-gate: FAIL - lint.json vendored: src/nothing is not a directory in the repo

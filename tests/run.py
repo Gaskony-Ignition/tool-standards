@@ -41,9 +41,11 @@ def findings(rule, path):
     return [line for line in out.splitlines() if line]
 
 
-def wanted(base):
-    """Non-blank lines of a fixture's expect.txt."""
-    with open(os.path.join(base, "expect.txt")) as fh:
+def wanted(base, name="expect.txt"):
+    """Non-blank lines of a fixture's expect file; none when an optional expect-good.txt is absent."""
+    if name != "expect.txt" and not os.path.exists(os.path.join(base, name)):
+        return []
+    with open(os.path.join(base, name)) as fh:
         return [line.strip() for line in fh if line.strip()]
 
 
@@ -57,8 +59,11 @@ def check_gate_cases():
         base = os.path.join(GATE_CASES, case)
         code, out = run_on_copy(os.path.join(base, "bad"), [GATE])
         missing = [w for w in wanted(base) if w not in out]
-        good = [d for d in sorted(os.listdir(base)) if d.startswith("good")
-                and run_on_copy(os.path.join(base, d), [GATE])[0] != 0]
+        good = []
+        for d in sorted(x for x in os.listdir(base) if x.startswith("good")):
+            gcode, gout = run_on_copy(os.path.join(base, d), [GATE])
+            if gcode != 0 or any(w not in gout for w in wanted(base, "expect-good.txt")):
+                good.append(d)
         if code != 1 or missing or good:
             failed += 1
             print("FAIL gate %s bad exit %d, missing %s; failing good %s" % (case, code, missing, good))

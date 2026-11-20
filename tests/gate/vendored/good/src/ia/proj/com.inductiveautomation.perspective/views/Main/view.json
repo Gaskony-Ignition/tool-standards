@@ -1,0 +1,34 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "Save"
+        },
+        "props": {
+          "text": "Save"
+        },
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\tpages = 2\n\tpkg.mod.total([1])"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}
