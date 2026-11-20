@@ -5,3 +5,5 @@ V3 runScript() whose first argument is not a function path on root/Inline props.
 V3 now() polls a script on root/Clock props.text
 V3 now() polls a script on root/Ticking props.text
 V3 tag() in expression on root/Raw props.text
+V3 script input view.custom.tick is polled by now() at rate 60000 in view.custom.tick on root/ViaTick props.text
+V3 script input view.custom.hop is polled by now() at rate 60000 in view.custom.tick on root/ViaHop props.text

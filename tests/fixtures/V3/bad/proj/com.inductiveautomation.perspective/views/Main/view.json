@@ -133,7 +133,59 @@
             }
           }
         }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "ViaTick"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", 0, {view.custom.tick})"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "ViaHop"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", 0, {view.custom.hop})"
+              }
+            }
+          }
+        }
       }
     ]
+  },
+  "propConfig": {
+    "custom.tick": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "floor(toLong(now(60000))/60000)"
+        }
+      }
+    },
+    "custom.hop": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.custom.tick"
+        }
+      }
+    }
   }
 }

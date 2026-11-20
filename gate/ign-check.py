@@ -595,6 +595,47 @@ def polling_problems(expr, scripted):
     return out
 
 
+def property_refs(comp, key):
+    """Property paths the value at key reads: {refs} in its expressions, and a property binding's path."""
+    b = ((comp.get("propConfig") or {}).get(key) or {}).get("binding") or {}
+    refs = [r for k, e in expressions_of(comp) if k == key for r in re.findall(r"\{([^{}]*)\}", e)]
+    if b.get("type") == "property" and isinstance((b.get("config") or {}).get("path"), str):
+        refs.append(b["config"]["path"])
+    return [r for r in refs if re.match(r"(view|this)\.", r)]
+
+
+def own_poll(comp, key):
+    """Rate of the now() poll in the expressions bound to key, or None."""
+    for k, expr in expressions_of(comp):
+        if k != key:
+            continue
+        masked = blank(expr)
+        for m in re.finditer(r"(?<![\w.])now\s*\(", masked):
+            args = call_arguments(expr, masked, m.end() - 1)
+            if not args:
+                return "1000"
+            if args[0] != "0":
+                return args[0]
+    return None
+
+
+def carrier(view, comp, ref, depth=2):
+    """(property, rate) when the property ref names, or one it reads within depth hops, is driven by a now() poll."""
+    where = view if ref.startswith("view.") else comp
+    prop = ref.split(".", 1)[1]
+    for key in sorted((where.get("propConfig") or {})):
+        if prop == key or prop.startswith(key + ".") or key.startswith(prop + "."):
+            rate = own_poll(where, key)
+            if rate:
+                return "%s.%s" % ("view" if where is view else "this", key), rate
+            if depth > 1:
+                for nxt in property_refs(where, key):
+                    hit = carrier(view, where, nxt, depth - 1)
+                    if hit:
+                        return hit
+    return None
+
+
 def check_v3(repo):
     """A binding that polls a script, or tag() in an expression."""
     for path, view in repo.views():
@@ -602,7 +643,13 @@ def check_v3(repo):
             for key, expr in expressions_of(comp):
                 b = (comp["propConfig"][key] or {}).get("binding") or {}
                 scripted = any(t.get("type") == "script" for t in b.get("transforms") or [])
-                for problem in sorted(set(polling_problems(expr, scripted))):
+                problems = polling_problems(expr, scripted)
+                if re.search(r"(?<![\w.])(runScript|tag)\s*\(", blank(expr)):
+                    for ref in sorted(set(re.findall(r"\{([^{}]*)\}", expr))):
+                        hit = carrier(view, comp, ref) if re.match(r"(view|this)\.", ref) else None
+                        if hit:
+                            problems.append("script input %s is polled by now() at rate %s in %s" % (ref, hit[1], hit[0]))
+                for problem in sorted(set(problems)):
                     yield repo.rel(path), 1, "V3", "%s on %s %s" % (problem, cpath, key)
 
 

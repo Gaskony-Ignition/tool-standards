@@ -99,7 +99,84 @@
             }
           }
         }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "OnPick"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", 0, {view.custom.picked})"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "OnTag"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "runScript(\"pkg.mod.f\", 0, {view.custom.level})"
+              }
+            }
+          }
+        }
+      },
+      {
+        "type": "ia.display.label",
+        "meta": {
+          "name": "ClockOnly"
+        },
+        "props": {},
+        "propConfig": {
+          "props.text": {
+            "binding": {
+              "type": "expr",
+              "config": {
+                "expression": "dateFormat({view.custom.clock}, \"HH:mm\")"
+              }
+            }
+          }
+        }
       }
     ]
+  },
+  "propConfig": {
+    "custom.picked": {
+      "binding": {
+        "type": "property",
+        "config": {
+          "path": "view.params.path"
+        }
+      }
+    },
+    "custom.level": {
+      "binding": {
+        "type": "tag",
+        "config": {
+          "tagPath": "[default]Tank/Level"
+        }
+      }
+    },
+    "custom.clock": {
+      "binding": {
+        "type": "expr",
+        "config": {
+          "expression": "now(1000)"
+        }
+      }
+    }
   }
 }
