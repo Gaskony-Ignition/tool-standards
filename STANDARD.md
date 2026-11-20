@@ -73,6 +73,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | --- | --- | --- |
 | Every file in a resource folder is declared in its `resource.json`, and nothing declared is missing. | An undeclared file is undefined behaviour at import. | P1 |
 | `.resources/` is gitignored; a `resource.json` is committed with the file it describes. | Generated state stays out of git. | review |
+| Vendored third-party source is declared in `lint.json` with a folder and a reason, and is not linted; what is built from it is. | Third-party code is not ours to restyle, and a declared skip stays visible in the gate's output. | review |
 | Gateway event scripts, alarm pipelines and other runnable resources live in leaf projects, never an inheritable parent. | They would run once per child. | review |
 | Every gateway resource a project creates is named the project name plus a type suffix: tag provider `<Project>_Tags`, database connection `<Project>_DB`, user source `<Project>_Users`, alarm journal `<Project>_Journal`, historian `<Project>_Historian`, audit profile `<Project>_Audit`; a second one of a kind puts a purpose word before the suffix (`<Project>_History_DB`). | Whoever administers the gateway can see what belongs to which project, and what is safe to delete. | review |
 | A project's Setup creates the resources it needs and never deletes, renames or migrates one it did not just create. | Deleting is the administrator's decision. | review |
