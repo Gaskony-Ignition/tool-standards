@@ -7,7 +7,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Rule | Why | Check |
 | --- | --- | --- |
 | Indent with tabs, as the Designer's script editor does. | A tab and space mix is a syntax error to the linter. | S1 |
-| camelCase functions, methods and arguments; UPPER_SNAKE constants; leading underscore for private. | Matches `system.*`. | pylint invalid-name (functions, arguments); rest review |
+| Functions, methods and arguments in one case across the repo: camelCase (the default, matching `system.*`) or snake_case, set by `naming.functions` in `lint.json`; UPPER_SNAKE constants; leading underscore for private. | One case per repo reads as one codebase. | pylint invalid-name (functions, arguments); rest review |
 | One script package per project, named for the project. | Every call shows where it comes from. | review |
 | Logic lives in the project library; an event handler, custom method or script transform is a call of at most five lines. | Library code is testable and reusable. | V2 |
 | `system.util.getLogger("<package.module>")` once per module; no `print`. | Logs reach the gateway log with a name. | S5 |
@@ -19,8 +19,8 @@ What a project must look like when someone opens it in the Designer. Each rule c
 
 | Rule | Why | Check |
 | --- | --- | --- |
-| Name every component for what it is for, in PascalCase; never leave a Designer default (`Label_0`). | Names show in bindings, scripts and the tree. | V1, NamePatternRule |
-| camelCase custom properties, params, custom methods and message handlers; a message type shared between projects may be kebab-case under the project's prefix (`am-presence`). | One style across scripts and views. | NamePatternRule |
+| Name every component for what it is for, in one case across the repo (PascalCase by default; camelCase or snake_case by `naming.components` in `lint.json`); never leave a Designer default (`Label_0`). | Names show in bindings, scripts and the tree. | V1, NamePatternRule |
+| Custom properties, params and message handlers in one case across the repo (camelCase by default, snake_case by `naming.properties`), custom methods in the function case; a message type shared between projects may be kebab-case under the project's prefix (`am-presence`). | One style across scripts and views. | NamePatternRule |
 | Flex root by default; coordinate only for a fixed drawing. | Flex containers resize with the session. | review |
 | Inputs in `params`, internal state in `custom`. | A view's interface is readable at a glance. | review |
 | No binding from one component into another component's props; go through `view.custom` or a param. | Cross-component bindings break when either is moved. | V6 |

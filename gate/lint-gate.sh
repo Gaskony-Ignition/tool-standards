@@ -38,11 +38,33 @@ mapfile -d '' code < <(find "$repo" \( "${vprune[@]}" \) -prune -o -path '*/scri
 pkgs=$(find "$repo" \( "${prune[@]}" \) -prune -o -type d -path '*/script-python/*' -print \
     | sed -E 's#.*/script-python/([^/]+).*#\1#' | sort -u | paste -sd, -)
 { cat "$here/lint/jython.pylintrc"; printf '\n[VARIABLES]\nadditional-builtins=system,unicode,long,basestring,xrange,unichr,reduce,raw_input,file,cmp,execfile,apply,buffer,intern,coerce,reload%s\n' "${pkgs:+,$pkgs}"; } > "$tmp/pylintrc"
-python3 - "$here/lint/ign-lint.json" "$tmp" <<'PY'
-import json, sys
+# lint.json "naming" picks the repo's case; the gate fails only names that break it.
+python3 - "$here/lint/ign-lint.json" "$tmp" "$repo/lint.json" <<'PY' || exit 1
+import json, os, re, sys
 cfg = json.load(open(sys.argv[1]))
 cfg["PylintScriptRule"]["kwargs"].update(pylintrc=sys.argv[2] + "/pylintrc", debug_dir=sys.argv[2] + "/debug")
+naming = json.load(open(sys.argv[3])).get("naming", {}) if os.path.exists(sys.argv[3]) else {}
+cases = {"components": ("PascalCase", "camelCase", "snake_case"),
+         "properties": ("camelCase", "snake_case"), "functions": ("camelCase", "snake_case")}
+for k, v in naming.items():
+    if k not in cases or v not in cases[k]:
+        sys.exit("lint-gate: lint.json naming.%s must be one of %s" % (k, ", ".join(cases.get(k, ()))) if k in cases
+                 else "lint-gate: lint.json naming has no key %r (use %s)" % (k, ", ".join(cases)))
+rules = cfg["NamePatternRule"]["kwargs"]["node_type_specific_rules"]
+rules["component"]["convention"] = naming.get("components", "PascalCase")
+rules["property"]["convention"] = naming.get("properties", "camelCase")
+rules["custom_method"]["convention"] = naming.get("functions", "camelCase")
+if naming.get("properties") == "snake_case":
+    rules["message_handler"].update(convention="snake_case", pattern="^(?:[a-z][a-z0-9_]*|[a-z][a-z0-9]*(?:-[a-z0-9]+)+)$",
+                                    pattern_description="snake_case, or kebab-case with a project prefix")
 json.dump(cfg, open(sys.argv[2] + "/ign-lint.json", "w"))
+if naming.get("functions") == "snake_case":
+    rc = open(sys.argv[2] + "/pylintrc").read()
+    # ign-lint wraps view scripts in Perspective's own camelCase handler names and arguments.
+    rc = re.sub(r"(?m)^(function|method)-rgx=.*$",
+                r"\1-rgx=(_?[a-z][a-z0-9_]*|__[a-z][a-z0-9_]*__|on[A-Z][a-zA-Z0-9]*|valueChanged)$", rc)
+    rc = re.sub(r"(?m)^argument-rgx=.*$", "argument-rgx=(_?[a-z][a-z0-9_]*|previousValue|currentValue|missedEvents)$", rc)
+    open(sys.argv[2] + "/pylintrc", "w").write(rc)
 PY
 
 fail=0

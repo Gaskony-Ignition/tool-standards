@@ -1,0 +1,3 @@
+Name 'SaveButton' doesn't follow camelCase for component
+Function name "sumRows" doesn't conform
+lint-gate: FAIL - 2 new

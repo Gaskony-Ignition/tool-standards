@@ -1,0 +1,36 @@
+{
+  "custom": {},
+  "params": {
+    "area_id": 1
+  },
+  "props": {},
+  "root": {
+    "type": "ia.container.flex",
+    "meta": {
+      "name": "root"
+    },
+    "props": {},
+    "children": [
+      {
+        "type": "ia.input.button",
+        "meta": {
+          "name": "saveButton"
+        },
+        "props": {
+          "text": "Save"
+        },
+        "events": {
+          "component": {
+            "onActionPerformed": {
+              "type": "script",
+              "scope": "G",
+              "config": {
+                "script": "\tpkg.mod.sum_rows([self.view.params.area_id])"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}
