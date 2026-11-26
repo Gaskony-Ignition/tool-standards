@@ -1,0 +1,2 @@
+S3 banner comment at module level
+lint-gate: FAIL - 1 new

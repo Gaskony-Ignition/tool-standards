@@ -1,6 +1,6 @@
 # Ignition project standard
 
-What a project must look like when someone opens it in the Designer. Each rule carries a check ID that the gate enforces, or `review`, meaning a human judges it.
+What a project must look like when someone opens it in the Designer. Each rule carries a check ID that the gate enforces, or `review`, meaning a human judges it. A check marked `warning` is printed and counted but never fails the gate and never goes in a baseline.
 
 ## Scripts
 
@@ -12,7 +12,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Logic lives in the project library; an event handler, custom method or script transform is a call of at most five lines. | Library code is testable and reusable. | V2 |
 | `system.util.getLogger("<package.module>")` once per module; no `print`. | Logs reach the gateway log with a name. | S5 |
 | `except X as e`, never `except X, e`. | The comma form is Python 2 only. | S5 |
-| Never `import system`. | `system` is already in scope. | S5 |
+| `import system` is allowed but not needed. | `system` is already in scope; the import lets a module load under a CPython stub in tests. | review |
 | No undefined names, unused imports or variables, unreachable code, or mutable default arguments. | These are faults, not style. | pylint |
 
 ## Views
@@ -88,8 +88,8 @@ Comments are short. A reader should see what a function does from its name and o
 | --- | --- |
 | Every public function has a one-line docstring saying what it does or returns; the Designer shows it in autocomplete. | S2 |
 | Add an `Args:` or `Returns:` line only where the name and signature do not already say it. | review |
-| A `#` comment only for what the next person would get wrong: a platform trap, a unit, a non-obvious reason. One or two lines. | S3 (runs over three lines) |
-| Module docstring: at most five lines on what the module is for. Design notes belong in `docs/`. | S3 |
+| A `#` comment only for what the next person would get wrong: a platform trap, a unit, a non-obvious reason. One or two lines. | S3 warning (runs over three lines) |
+| Module docstring: at most five lines on what the module is for. Design notes belong in `docs/`. | S3 warning |
 | Never: section banners; history ("used to", "legacy", "v1 did"); ticket or fix numbers; verification stamps; commented-out code; a comment restating the line below it; usage-example footers. | S3, S4 |
 
 Before:

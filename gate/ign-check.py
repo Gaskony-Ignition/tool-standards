@@ -4,8 +4,9 @@ views, tag exports, named queries and resource manifests. Rules nothing publishe
 
 Usage: ign-check.py <repo-path> [--only ID,ID] [--list]
 
-Prints `<path>:<line>: <ID> <message>` per finding, sorted. Exit 0 whatever it finds,
-2 on a usage error; the caller decides what fails. Python 3.10+, stdlib only.
+Prints `<path>:<line>: <ID> <message>` per finding, sorted; a message that starts with
+`warning: ` is reported but never fails the gate. Exit 0 whatever it finds, 2 on a usage
+error; the caller decides what fails. Python 3.10+, stdlib only.
 """
 import argparse
 import ast
@@ -388,19 +389,19 @@ def check_s2(repo):
 
 
 def check_s3(repo):
-    """Banner comments, comment blocks over 3 lines, module docstrings over 5 lines."""
+    """Banner comments; comment blocks over 3 lines and module docstrings over 5 lines as warnings."""
     for f in repo.code_files():
         pairs, comments = repo.lexed(f)
         rel = repo.rel(f)
         if pairs and pairs[0][0].only_strings and pairs[0][0].end - pairs[0][0].start + 1 > 5:
-            yield rel, pairs[0][0].start, "S3", "module docstring over 5 lines"
+            yield rel, pairs[0][0].start, "S3", "warning: module docstring over 5 lines"
         for block in comment_blocks(comments):
             owner = where(comment_owner(pairs, block[0]))
             banners = [c for c in block if is_banner(c[1])]
             if banners:
                 yield rel, banners[0][0], "S3", "banner comment %s" % owner
             if len(block) > 3:
-                yield rel, block[0][0], "S3", "comment block over 3 lines %s" % owner
+                yield rel, block[0][0], "S3", "warning: comment block over 3 lines %s" % owner
 
 
 def check_s4(repo):
@@ -420,7 +421,7 @@ def check_s4(repo):
 
 
 def check_s5(repo):
-    """Python 3 or Jython anti-idioms: print, import system, except X, e."""
+    """Python 3 or Jython anti-idioms: print, except X, e."""
     for rel, pairs, label in repo.scripts():
         for lg, owner in pairs:
             text = flat = lg.masked
@@ -429,8 +430,6 @@ def check_s5(repo):
             found = []
             if re.search(r"(?<![\w.])print\b(?!\s*=[^=])", text):
                 found.append("print")
-            if re.match(r"import\s+(?:.*,\s*)?system(?:[.\s,]|$)|from\s+system[.\s]", text):
-                found.append("import system")
             if re.match(r"except\s+[^,:]+,\s*\w+\s*:", flat):
                 found.append("except X, e")
             for what in found:
@@ -1010,9 +1009,9 @@ def check_k1(repo):
 RULES = {
     "S1": ("script indented with spaces or a tab/space mix", check_s1),
     "S2": ("public function with no docstring, or a summary over one line", check_s2),
-    "S3": ("banner comment, comment block over 3 lines, module docstring over 5 lines", check_s3),
+    "S3": ("banner comment; warns on a comment block over 3 lines or module docstring over 5", check_s3),
     "S4": ("history note or commented-out code in a comment or docstring", check_s4),
-    "S5": ("print, import system, or except X, e", check_s5),
+    "S5": ("print, or except X, e", check_s5),
     "S6": ("system.db.run*Query with SQL built by +, % or .format()", check_s6),
     "V1": ("component left with the Designer's default name", check_v1),
     "V2": ("inline view script over 5 statement lines", check_v2),

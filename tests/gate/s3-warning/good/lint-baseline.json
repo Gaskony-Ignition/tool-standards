@@ -1,0 +1,3 @@
+[
+  {"rule": "S5", "file": "proj/ignition/script-python/pkg/mod/code.py", "message": "import system at module level"}
+]

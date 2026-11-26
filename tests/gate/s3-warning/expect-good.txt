@@ -1,0 +1,4 @@
+S3 module docstring over 5 lines (warning)
+S3 comment block over 3 lines at module level (warning)
+lint-gate: pass - 0 new, 0 baseline, 0 excepted, 2 warnings
+no longer fails on

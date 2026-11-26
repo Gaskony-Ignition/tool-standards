@@ -37,6 +37,9 @@ PERSPECTIVE = "com.inductiveautomation.perspective/"
 NOISE = {tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE, tokenize.INDENT, tokenize.DEDENT, tokenize.ENDMARKER}
 # Used when a script does not tokenize: the same reads and calls, comments and strings included.
 RAW_ACCESS = re.compile(r"\.\s*(custom|params)\s*(?:\.\s*(\w+)|\[\s*[uU]?(['\"])(\w+)\3\s*\])")
+# Baseline entries for findings the gate no longer fails on: once warnings, or dropped. They are
+# reported for removal but do not make the baseline stale.
+RETIRED = re.compile(r"^(?:S3 (?:comment block over 3 lines|module docstring over 5 lines)|S5 import system)\b")
 
 Finding = collections.namedtuple("Finding", "source rule file line message severity raw ids")
 
@@ -207,7 +210,7 @@ def parse_pylint(repo, text):
 
 
 def parse_ign_check(text):
-    """Findings from ign-check.py: <file>:<line>: <ID> <message>."""
+    """Findings from ign-check.py: <file>:<line>: <ID> <message>, where a `warning: ` message only prints."""
     out, bad = [], []
     for line in text.splitlines():
         if not line.strip():
@@ -215,7 +218,9 @@ def parse_ign_check(text):
         m = IGN_CHECK.match(line)
         if m:
             file, n, rule, msg = m.groups()
-            out.append(Finding("ign-check", rule, file, int(n), msg, "style", line, [rule]))
+            severity = "warning" if msg.startswith("warning: ") else "style"
+            msg = msg[len("warning: "):] if severity == "warning" else msg
+            out.append(Finding("ign-check", rule, file, int(n), msg, severity, line, [rule]))
         else:
             bad.append(line)
     return out, bad
@@ -333,6 +338,8 @@ def main():
         seen[k] += 1
         (accepted if seen[k] <= base[k] else new).append(f)
     stale = sorted((base - seen).elements())
+    retired = [s for s in stale if RETIRED.match("%s %s" % (s[0], s[2]))]
+    stale = [s for s in stale if s not in retired]
 
     def show(f, tag=""):
         print("%s:%d: %s %s%s" % (f.file, f.line, f.rule, f.message, tag))
@@ -350,6 +357,10 @@ def main():
             print("::error file=%s,line=%d,title=%s::%s"
                   % (escape(f.file, True), f.line, escape(f.rule, True), escape(f.message)))
 
+    if retired:
+        print("lint-gate: baseline entries for findings the gate no longer fails on - drop them with --write-baseline:")
+        for r, fi, m in retired:
+            print("  %s %s %s" % (fi, r, m))
     if stale:
         print("lint-gate: baseline is stale, run --write-baseline - these entries no longer match:")
         for r, fi, m in stale:
@@ -360,8 +371,9 @@ def main():
         for r in unused:
             print("  %s %s %r" % (r["file"], r["rule"], r["match"]))
     fail = fail or bool(new or stale or unused)
-    print("lint-gate: %s - %d new, %d baseline, %d excepted"
-          % ("FAIL" if fail else "pass", len(new), len(accepted), len(excepted)))
+    warnings = sum(f.severity == "warning" for f in live)
+    print("lint-gate: %s - %d new, %d baseline, %d excepted, %d warnings"
+          % ("FAIL" if fail else "pass", len(new), len(accepted), len(excepted), warnings))
     return 1 if fail else 0
 
 
