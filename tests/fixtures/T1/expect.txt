@@ -1,2 +1,4 @@
 T1 tag name is not an identifier: My Folder
 T1 tag name is not an identifier: My Folder/Pump-1
+gen/tagdata.py:3: T1 tag name is not an identifier: Site/Pump 1
+gen/tagdata.py:1: T1 lint.json tags source cannot be read: no module-level assignment to MISSING

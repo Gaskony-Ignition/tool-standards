@@ -1,0 +1,48 @@
+{
+  "name": "",
+  "tagType": "Provider",
+  "tags": [
+    {
+      "name": "_types_",
+      "tagType": "Folder",
+      "tags": [
+        {
+          "name": "Pump",
+          "tagType": "UdtType",
+          "tags": [
+            {
+              "name": "Running",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean",
+              "documentation": "True while the motor runs."
+            },
+            {
+              "name": "Speed",
+              "tagType": "AtomicTag",
+              "dataType": "Float4",
+              "engUnit": "%",
+              "documentation": "Speed feedback."
+            },
+            {
+              "name": "Fault",
+              "tagType": "AtomicTag",
+              "dataType": "Boolean"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "P101",
+      "tagType": "UdtInstance",
+      "typeId": "Pump",
+      "tags": [
+        {
+          "name": "Fault",
+          "tagType": "AtomicTag",
+          "documentation": "Drive trip."
+        }
+      ]
+    }
+  ]
+}

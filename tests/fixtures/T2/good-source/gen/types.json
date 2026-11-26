@@ -1,0 +1,2 @@
+{"types": [{"name": "Valve", "tagType": "UdtType", "tags": [
+  {"name": "Position", "tagType": "AtomicTag", "dataType": "Float4", "engUnit": "%", "valueSource": "memory"}]}]}

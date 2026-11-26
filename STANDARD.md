@@ -58,6 +58,9 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | A UDT for any equipment that repeats; a parent UDT for variants, not one type with unused members. | One definition to change. | review |
 | UDT parameters, not hard-coded paths. | The type works for every instance. | review |
 | Engineering units on every float UDT member. | Displays and history carry the unit. | T2 |
+| Every UDT member tag has documentation. | The Designer and the tag browser show it, so the next person knows what the member means. | T3 warning |
+| An alarm's display path and label come from UDT parameters, never a literal written per instance. | Every instance names its alarms the same way, and a rename is one parameter change. | review |
+| Tag definitions a generator holds outside a tag export (a JSON file, JSON in a script string) are listed under `tags` in `lint.json`, so the tag checks read them. | Unread definitions are unchecked. | review |
 
 ## Named queries and SQL
 

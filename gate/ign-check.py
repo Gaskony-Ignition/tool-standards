@@ -806,16 +806,76 @@ def check_v6(repo):
                     yield repo.rel(path), 1, "V6", "%s %s binds to %s" % (cpath, key, target)
 
 
+def string_value(node):
+    """The text of a string expression built from literals by +, implicit joining or "".join([...])."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return string_value(node.left) + string_value(node.right)
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "join" \
+            and len(node.args) == 1 and isinstance(node.args[0], (ast.List, ast.Tuple)) and not node.keywords:
+        return string_value(node.func.value).join(string_value(e) for e in node.args[0].elts)
+    raise ValueError("not a string built from literals")
+
+
+def python_string(repo, path, variable):
+    """(line, text) of a module-level string assignment in a Python file, read without running it."""
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        text = fh.read()
+    for lg in lex(text)[0]:
+        if lg.width == 0 and re.match(r"%s\s*=[^=]" % re.escape(variable), lg.masked):
+            source = "\n".join(text.replace("\r\n", "\n").split("\n")[lg.start - 1:lg.end])
+            return lg.start, string_value(ast.parse(source).body[0].value)
+    raise ValueError("no module-level assignment to %s" % variable)
+
+
+def declared_tags(repo, src):
+    """(line, tag tree) for one lint.json tags entry, placed in the folders its "at" names."""
+    path = os.path.join(repo.root, str(src.get("path", "")))
+    kind = src.get("kind")
+    if kind == "json-file":
+        line, data = 1, repo.json(path)
+        if data is None:
+            raise ValueError("not a JSON file")
+    elif kind == "python-json-string":
+        line, text = python_string(repo, path, str(src.get("variable", "")))
+        data = json.loads(text)
+    else:
+        raise ValueError('kind must be "json-file" or "python-json-string"')
+    if src.get("select"):
+        data = data.get(src["select"]) if isinstance(data, dict) else None
+    tags = data if isinstance(data, list) else data.get("tags") if isinstance(data, dict) else None
+    if not isinstance(tags, list):
+        raise ValueError("holds no list of tags")
+    for seg in reversed([s for s in str(src.get("at", "")).split("/") if s]):
+        tags = [{"name": seg, "tagType": "Folder", "tags": tags}]
+    return line, {"tags": tags}
+
+
 def tag_exports(repo):
-    """(path, export) for JSON files shaped like a tag export."""
-    out = []
+    """(path, line, export) for JSON files shaped like a tag export, and each source lint.json "tags" names.
+
+    A source that cannot be read is reported as a finding of each tag rule.
+    """
+    sources = (repo.json(os.path.join(repo.root, "lint.json")) or {}).get("tags") or []
+    out, listed = [], {os.path.normpath(os.path.join(repo.root, str(s.get("path", ""))))
+                       for s in sources if isinstance(s, dict)}
     for f in repo.files:
-        if not f.endswith(".json") or f.endswith(("/view.json", "/resource.json")):
+        if not f.endswith(".json") or f.endswith(("/view.json", "/resource.json")) or os.path.normpath(f) in listed:
             continue
         d = repo.json(f)
         tags = d.get("tags") if isinstance(d, dict) else None
         if isinstance(tags, list) and ("tagType" in d or any(isinstance(t, dict) and "tagType" in t for t in tags)):
-            out.append((f, d))
+            out.append((f, 1, d))
+    for src in sources:
+        f = os.path.join(repo.root, str(src.get("path", ""))) if isinstance(src, dict) else repo.root
+        try:
+            if not isinstance(src, dict):
+                raise ValueError("entry is not an object")
+            line, d = declared_tags(repo, src)
+            out.append((f, line, d))
+        except (OSError, ValueError, SyntaxError) as err:
+            out.append((f, 1, err))
     return out
 
 
@@ -833,55 +893,81 @@ def walk_tags(node, path, in_types=False, in_udt=False):
                              in_udt or (in_types and kind == "UdtType"))
 
 
+def readable(repo, rule):
+    """(path, line, export) of each tag source that reads, after yielding a finding for each that does not."""
+    out = []
+    for f, line, d in tag_exports(repo):
+        if isinstance(d, Exception):
+            yield repo.rel(f), line, rule, "lint.json tags source cannot be read: %s" % d
+        else:
+            out.append((f, line, d))
+    return out
+
+
 def check_t1(repo):
     """Tag, folder, UDT or member name that is not an identifier."""
-    for f, d in tag_exports(repo):
+    for f, line, d in (yield from readable(repo, "T1")):
         for p, t, _, _ in walk_tags(d, ""):
             if t.get("tagType") != "Provider" and not TAG_NAME.match(str(t.get("name", ""))):
-                yield repo.rel(f), 1, "T1", "tag name is not an identifier: %s" % p
+                yield repo.rel(f), line, "T1", "tag name is not an identifier: %s" % p
 
 
-def units_set(node, path=""):
-    """Member paths under a UDT instance that set their own engUnit."""
+def props_set(node, prop, path=""):
+    """Member paths under a UDT instance that set their own value of prop."""
     out = set()
     for t in node.get("tags") or []:
         if isinstance(t, dict):
             p = "%s/%s" % (path, t.get("name")) if path else str(t.get("name"))
-            if t.get("engUnit"):
+            if t.get(prop):
                 out.add(p)
-            out |= units_set(t, p)
+            out |= props_set(t, prop, p)
     return out
 
 
-def instances(node, acc):
-    """Map each typeId to the set of unit-bearing member paths of each of its instances."""
+def instances(node, prop, acc):
+    """Map each typeId to the set of member paths that set prop, one set per instance."""
     for t in node.get("tags") or []:
         if isinstance(t, dict):
             if t.get("tagType") == "UdtInstance":
-                acc.setdefault(str(t.get("typeId")), []).append(units_set(t))
-            instances(t, acc)
+                acc.setdefault(str(t.get("typeId")), []).append(props_set(t, prop))
+            instances(t, prop, acc)
     return acc
 
 
-def check_t2(repo):
-    """Float UDT member with no engineering unit, unless every instance of the type sets one."""
-    exports, acc = tag_exports(repo), {}
-    for _, d in exports:
-        instances(d, acc)
-    for f, d in exports:
+def members_missing(exports, prop, wanted):
+    """(file, line, member path) of each UDT member that wanted() picks and that sets no prop,
+    unless every instance of its type sets one."""
+    acc = {}
+    for _, _, d in exports:
+        instances(d, prop, acc)
+    for f, line, d in exports:
         types = []
         for p, t, _, in_udt in walk_tags(d, ""):
             if t.get("tagType") == "UdtType":
                 types.append(p)
-            if not (in_udt and t.get("tagType") == "AtomicTag" and t.get("dataType") in ANALOGUE_TYPES) \
-                    or t.get("engUnit"):
+            if not (in_udt and wanted(t)) or t.get(prop):
                 continue
             home = max((u for u in types if p.startswith(u + "/")), key=len, default="")
             type_id = home.split("_types_/", 1)[-1]
             member = p[len(home) + 1:]
             found = acc.get(type_id, [])
             if not found or not all(member in s for s in found):
-                yield repo.rel(f), 1, "T2", "UDT member has no engUnit: %s" % p
+                yield f, line, p
+
+
+def check_t2(repo):
+    """Float UDT member with no engineering unit, unless every instance of the type sets one."""
+    exports = yield from readable(repo, "T2")
+    analogue = lambda t: t.get("tagType") == "AtomicTag" and t.get("dataType") in ANALOGUE_TYPES
+    for f, line, p in members_missing(exports, "engUnit", analogue):
+        yield repo.rel(f), line, "T2", "UDT member has no engUnit: %s" % p
+
+
+def check_t3(repo):
+    """UDT member tag with no documentation, unless every instance of the type sets it (a warning)."""
+    exports = yield from readable(repo, "T3")
+    for f, line, p in members_missing(exports, "documentation", lambda t: t.get("tagType") == "AtomicTag"):
+        yield repo.rel(f), line, "T3", "warning: UDT member has no documentation: %s" % p
 
 
 def check_q1(repo):
@@ -1021,6 +1107,7 @@ RULES = {
     "V6": ("property binding that reads another component's props", check_v6),
     "T1": ("tag, folder, UDT or member name that is not an identifier", check_t1),
     "T2": ("float UDT member with no engUnit, in the type or on every instance", check_t2),
+    "T3": ("warns on a UDT member tag with no documentation, in the type or on every instance", check_t3),
     "Q1": ("named query with a QueryString parameter", check_q1),
     "P1": ("resource folder that does not match its resource.json files", check_p1),
     "K1": ("table kit copy (kittable, Kit/Table views, stylesheet block) that differs from kit/table", check_k1),
