@@ -46,6 +46,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Rule | Why | Check |
 | --- | --- | --- |
 | Colours come from style classes and theme variables, never a literal in a view. | A theme change reaches every view. | V4 |
+| A project's own CSS variable is used with a stock theme variable as its fallback: `var(--project-token, var(--stock-variable))`. | The page still reads if the project stylesheet or theme does not load. | V7 warning |
 | Style class names lowercase-with-dashes under the project's prefix. | Classes from different projects do not collide. | review |
 | The project stylesheet declares `html { color-scheme: dark }` or `light`. | Without it Chrome's auto dark mode repaints SVG fills. | color-scheme |
 | A project follows the session's selected theme and reads well in each: it does not fix a palette or override theme variables. A project with a fixed look is a written exception and carries no theme selector. | A selector that changes nothing looks broken, and themes are the gateway's one place to set the look. | review |

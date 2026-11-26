@@ -1,0 +1,7 @@
+:root {
+  --psc-text: var(--neutral-90);
+}
+.psc-title {
+  color: var(--psc-text);
+  border-color: var(--psc-line, var(--psc-edge));
+}

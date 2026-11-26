@@ -1,0 +1,8 @@
+{
+  "base": {
+    "style": {
+      "backgroundColor": "var(--psc-card)",
+      "color": "var(--neutral-90)"
+    }
+  }
+}

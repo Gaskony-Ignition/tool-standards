@@ -735,6 +735,31 @@ def check_v4(repo):
     yield from css_variable_findings(repo)
 
 
+STOCK_VARIABLES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lint", "stock-theme-variables.txt")
+
+
+def check_v7(repo):
+    """var() of a custom property the stock themes do not define, with no fallback, in a style class or stylesheet (a warning)."""
+    with open(STOCK_VARIABLES, encoding="utf-8") as fh:
+        stock = {ln.strip() for ln in fh if ln.strip() and not ln.startswith("#")}
+    cfg = (repo.json(os.path.join(repo.root, "lint.json")) or {}).get("cssVariables")
+    prefixes = tuple((cfg or {}).get("prefixes") or []) if isinstance(cfg, dict) else ()
+    for f in repo.files:
+        rel = repo.rel(f)
+        if not (("/style-classes/" in "/" + rel and rel.endswith("/style.json"))
+                or ("/stylesheet/" in "/" + rel and rel.endswith(".css"))):
+            continue
+        with open(f, encoding="utf-8", errors="replace") as fh:
+            lines = fh.read().splitlines()
+        seen = set()
+        for n, line in enumerate(lines, 1):
+            for name, end in re.findall(r"var\(\s*(--[\w-]+)\s*([,)]?)", line):
+                if end == "," or name in stock or name.startswith(prefixes or ("\0",)) or name in seen:
+                    continue
+                seen.add(name)
+                yield rel, n, "V7", "warning: var(%s) has no stock fallback; write var(%s, var(--stock-variable))" % (name, name)
+
+
 def embeds(comp):
     """Static view paths a component embeds."""
     props, bound = comp.get("props") or {}, set(comp.get("propConfig") or {})
@@ -1114,6 +1139,7 @@ RULES = {
     "V4": ("literal colour in component props; undefined CSS variable when configured", check_v4),
     "V5": ("chain of embedded views more than 3 deep", check_v5),
     "V6": ("property binding that reads another component's props", check_v6),
+    "V7": ("warns on var() of a non-stock theme variable with no fallback in a style class or stylesheet", check_v7),
     "T1": ("tag, folder, UDT or member name that is not an identifier", check_t1),
     "T2": ("float UDT member with no engUnit, in the type or on every instance", check_t2),
     "T3": ("warns on a UDT member tag with no documentation, in the type or on every instance", check_t3),
