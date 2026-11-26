@@ -82,7 +82,9 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Vendored third-party source is declared in `lint.json` with a folder and a reason, and is not linted; what is built from it is. | Third-party code is not ours to restyle, and a declared skip stays visible in the gate's output. | review |
 | Gateway event scripts, alarm pipelines and other runnable resources live in leaf projects, never an inheritable parent. | They would run once per child. | review |
 | Every gateway resource a project creates is named the project name plus a type suffix: tag provider `<Project>_Tags`, database connection `<Project>_DB`, user source `<Project>_Users`, alarm journal `<Project>_Journal`, historian `<Project>_Historian`, audit profile `<Project>_Audit`; a second one of a kind puts a purpose word before the suffix (`<Project>_History_DB`). | Whoever administers the gateway can see what belongs to which project, and what is safe to delete. | review |
-| A project's Setup creates the resources it needs and never deletes, renames or migrates one it did not just create. | Deleting is the administrator's decision. | review |
+| A project's Setup creates the resources it needs and never deletes, renames, migrates or replaces one it did not just create; an existing resource that differs from what Setup wants is reported and left alone. | Deleting or overwriting is the administrator's decision. | review |
+| Setup's decision logic (what exists, what differs, what to create) is tested off the gateway with a stub of `system`. | A wrong decision is caught before it runs against a real gateway. | review |
+| Every operator write goes through one library function that re-checks the user's security level and audits refused attempts as well as completed ones. | A hidden button is not a security check, and a refused write is worth knowing about. | review |
 | No passwords, tokens or keys in scripts, queries or properties. | They end up in git history. | review |
 
 ## Comments
