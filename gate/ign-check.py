@@ -10,6 +10,8 @@ Prints `<path>:<line>: <ID> <message>` per finding, sorted. Exit 0 whatever it f
 import argparse
 import ast
 import collections
+import contextlib
+import io
 import json
 import os
 import re
@@ -934,6 +936,77 @@ def check_p1(repo):
             yield rel, 1, "P1", msg
 
 
+# IGN_KIT_DIR points the rule at another kit, for the test fixtures.
+KIT_DIR = os.environ.get("IGN_KIT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kit", "table")
+KIT_VIEWS = ("Table", "TableMenu", "TableMenuItem")
+
+
+def kit_block(text):
+    """The table kit's stylesheet block, BEGIN to END line inclusive, or None."""
+    lines = text.splitlines()
+    begin = next((i for i, l in enumerate(lines) if "BEGIN table kit" in l), None)
+    end = next((i for i, l in enumerate(lines) if "END table kit" in l), None)
+    if begin is None or end is None or end < begin:
+        return None
+    return "\n".join(lines[begin:end + 1]).strip()
+
+
+def generated_kit_views():
+    """The kit's three views as the kit's own generator writes them, name -> parsed JSON."""
+    import importlib.util
+    import tempfile
+    spec = importlib.util.spec_from_file_location("kit_table", os.path.join(KIT_DIR, "kit_table.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, "com.inductiveautomation.perspective"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            mod.main(tmp)
+        base = os.path.join(tmp, "com.inductiveautomation.perspective", "views", "Kit")
+        out = {}
+        for name in KIT_VIEWS:
+            with open(os.path.join(base, name, "view.json"), encoding="utf-8") as fh:
+                out[name] = json.load(fh)
+        return out
+
+
+def check_k1(repo):
+    """A copy of the table kit that differs from the kit/table in this standards checkout."""
+    code = [f for f in repo.files if f.endswith("/script-python/kittable/code.py")]
+    kit_views = [f for f in repo.files if f.endswith("/views/Kit/Table/view.json")]
+    if not code and not kit_views:
+        return
+    if not os.path.isdir(KIT_DIR):
+        return
+    fix = "re-copy kit/table from the standards repo (kit/table/README.md)"
+
+    def read(path):
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+
+    sources = {"kit_table.py": [f for f in repo.files if os.path.basename(f) == "kit_table.py"],
+               "kit_rules.css": [f for f in repo.files if os.path.basename(f) == "kit_rules.css"],
+               os.path.join("kittable", "code.py"): code}
+    for name, paths in sources.items():
+        want = read(os.path.join(KIT_DIR, name))
+        for path in paths:
+            if read(path) != want:
+                yield repo.rel(path), 1, "K1", "table kit copy differs from the standards kit (%s)" % fix
+    sheets = [f for f in repo.files if f.endswith("/stylesheet/stylesheet.css")]
+    want_block = read(os.path.join(KIT_DIR, "kit_rules.css")).strip()
+    for path in sheets:
+        if kit_block(read(path)) != want_block:
+            yield repo.rel(path), 1, "K1", "stylesheet's table kit block differs from the standards kit or is missing (%s)" % fix
+    if kit_views:
+        want_views = generated_kit_views()
+        for path in kit_views:
+            base = os.path.dirname(os.path.dirname(path))
+            for name in KIT_VIEWS:
+                vpath = os.path.join(base, name, "view.json")
+                if repo.json(vpath) != want_views[name]:
+                    yield repo.rel(vpath), 1, "K1", "table kit view differs from what the standards kit generates (%s)" % fix
+
+
 RULES = {
     "S1": ("script indented with spaces or a tab/space mix", check_s1),
     "S2": ("public function with no docstring, or a summary over one line", check_s2),
@@ -951,6 +1024,7 @@ RULES = {
     "T2": ("float UDT member with no engUnit, in the type or on every instance", check_t2),
     "Q1": ("named query with a QueryString parameter", check_q1),
     "P1": ("resource folder that does not match its resource.json files", check_p1),
+    "K1": ("table kit copy (kittable, Kit/Table views, stylesheet block) that differs from kit/table", check_k1),
 }
 
 

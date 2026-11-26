@@ -21,7 +21,7 @@ FIXTURES = os.path.join(HERE, "fixtures")
 GATE_CASES = os.path.join(HERE, "gate")
 
 
-def run_on_copy(path, cmd):
+def run_on_copy(path, cmd, env=None):
     """Exit code and stdout of cmd + [copy of the fixture tree at path]."""
     with tempfile.TemporaryDirectory() as tmp:
         tree = os.path.join(tmp, "tree")
@@ -29,13 +29,18 @@ def run_on_copy(path, cmd):
         if os.path.exists(os.path.join(tree, "gitignore")):
             os.rename(os.path.join(tree, "gitignore"), os.path.join(tree, ".gitignore"))
             subprocess.run(["git", "init", "-q", tree], check=True)
-        r = subprocess.run(cmd + [tree], capture_output=True, text=True)
+        r = subprocess.run(cmd + [tree], capture_output=True, text=True, env=env)
     return r.returncode, r.stdout
 
 
 def findings(rule, path):
-    """Finding lines from running one rule over a copy of one fixture tree."""
-    code, out = run_on_copy(path, [sys.executable, CHECK, "--only", rule])
+    """Finding lines from running one rule over a copy of one fixture tree.
+    A rule whose fixtures hold a `kit/` folder next to bad/ and good/ runs against that kit."""
+    env = None
+    kit = os.path.join(FIXTURES, rule, "kit")
+    if os.path.isdir(kit):
+        env = dict(os.environ, IGN_KIT_DIR=kit)
+    code, out = run_on_copy(path, [sys.executable, CHECK, "--only", rule], env)
     if code:
         raise SystemExit("ign-check.py exited %d on %s" % (code, path))
     return [line for line in out.splitlines() if line]

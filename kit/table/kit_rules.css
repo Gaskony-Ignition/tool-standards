@@ -1,0 +1,117 @@
+/* ===== BEGIN table kit: Kit/Table, Kit/TableMenu, Kit/TableMenuItem. This block is the source; edit it here (docs/TABLE-KIT.md). ===== */
+/* The host maps these tokens, the kit paints nothing else:
+ *   --kit-popup      the menus' fill (opaque)
+ *   --kit-surface    the table body          --kit-raised   the header row and footer
+ *   --kit-control    inputs and buttons      --kit-line     hairlines          --kit-line-strong  hover borders
+ *   --kit-fg         text                    --kit-fg-muted header text        --kit-fg-faint     placeholders, icons
+ *   --kit-accent     focus, links            --kit-accent-soft  the group row tint
+ *   (the totals row's tint is the text colour at 9 %, derived in .psc-kit-root)
+ *   --kit-hover      row hover               --kit-ok / -warn / -danger / -info    chip tones
+ *   --kit-radius     controls and menus      --kit-pill     button radius          --kit-control-h  control height
+ *   --kit-fs / --kit-fs-small / --kit-fs-head   type sizes     --kit-shadow       menus
+ */
+.psc-kit-root { background: var(--kit-surface); color: var(--kit-fg); font-size: var(--kit-fs); min-height: 0; --kit-row: 37px; --kit-foot-h: 0px;
+  --kit-total: color-mix(in srgb, var(--kit-fg) 9%, transparent); }
+.psc-kit-dense { --kit-row: 27px; }
+.psc-kit-totals { --kit-foot-h: 30px; }
+.psc-kit-bar { padding: 0 0 10px 0; gap: 10px; flex-wrap: nowrap; container-type: inline-size; overflow: hidden; }
+.psc-kit-search { min-width: 80px; }
+.psc-kit-more { display: none !important; width: 28px !important; min-width: 28px !important; height: 28px !important; min-height: 28px !important; border: 1px solid var(--kit-line) !important;
+  border-radius: var(--kit-pill) !important; background: var(--kit-control) !important; color: var(--kit-fg-muted) !important; }
+/* a narrow table (a card beside others): Density, Columns, Export and the group buttons fold into the three-dot menu, Group by shrinks, Search takes the rest */
+@container (max-width: 780px) {
+  .psc-kit-wide { display: none !important; }
+  .psc-kit-more { display: inline-block !important; }
+  .psc-kit-group { flex-basis: 120px !important; width: 120px !important; min-width: 0 !important; }
+}
+/* no left padding and an empty title takes no room, so the rows line, the search box and the host card's title share one left edge */
+.psc-kit-info { padding: 0 0 8px 0; gap: 12px; flex-wrap: nowrap; }
+.psc-kit-title:has(> span:empty) { display: none !important; }
+.psc-kit-title { color: var(--kit-fg); font-size: var(--kit-fs); font-weight: 600; white-space: nowrap; }
+.psc-kit-count { color: var(--kit-fg-muted); font-size: var(--kit-fs-small); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.psc-kit-barlabel { color: var(--kit-fg-muted); font-size: var(--kit-fs); white-space: nowrap; }
+.psc-kit-input, .psc-kit-input input, .psc-kit-select { background: var(--kit-control) !important; border: 1px solid var(--kit-line) !important;
+  border-radius: var(--kit-radius) !important; color: var(--kit-fg) !important; box-shadow: none !important; font-size: var(--kit-fs) !important; }
+.psc-kit-input { height: var(--kit-control-h); min-height: var(--kit-control-h); }
+.psc-kit-input input { border: 0 !important; background: transparent !important; }
+.psc-kit-input:hover, .psc-kit-select:hover { border-color: var(--kit-line-strong) !important; }
+.psc-kit-input:focus-within { border-color: var(--kit-accent) !important; }
+/* the Group by select takes the toolbar buttons' pill shape and the theme's focus outline, not a bright border */
+.psc-kit-select { border-radius: var(--kit-pill) !important; }
+.psc-kit-select.ia_dropdown--focused, .psc-kit-select:focus-within { border-color: var(--kit-line-strong) !important; outline: 2px solid var(--kit-accent); outline-offset: -2px; }
+.psc-kit-input input::placeholder { color: var(--kit-fg-muted); opacity: .8; }
+.psc-kit-select .iaDropdownCommon_value, .psc-kit-select svg { color: var(--kit-fg) !important; fill: var(--kit-fg-muted) !important; }
+.psc-kit-btn { height: var(--kit-control-h) !important; min-height: var(--kit-control-h) !important; padding: 0 12px !important; border-radius: var(--kit-pill) !important;
+  background: var(--kit-control) !important; border: 1px solid var(--kit-line) !important; color: var(--kit-fg) !important; font-size: var(--kit-fs) !important;
+  font-weight: 600 !important; white-space: nowrap; justify-content: center; }
+.psc-kit-btn * { font-size: inherit !important; font-weight: inherit !important; }
+.psc-kit-btn:hover:enabled { border-color: var(--kit-line-strong) !important; }
+.psc-kit-pill { color: var(--kit-fg-muted); font-size: var(--kit-fs-small); font-weight: 600; cursor: pointer; white-space: nowrap; height: 24px; line-height: 22px;
+  padding: 0 10px; border: 1px solid var(--kit-line); border-radius: 999px; box-sizing: border-box; background: var(--kit-control); user-select: none; }
+.psc-kit-pill:hover { color: var(--kit-fg); border-color: var(--kit-line-strong); }
+.psc-kit-pill-off { opacity: .4; cursor: default; pointer-events: none; }
+.psc-kit-pill-on { color: var(--kit-accent); border-color: var(--kit-accent); }
+
+/* the stock Table's body, repainted: no frame, hairline rows, dividers between columns. Its own header is off; the kit's is the strip above. */
+.psc-kit-table, .psc-kit-table .ia_table, .psc-kit-table .ia_table__body, .psc-kit-table .ia_table__footContainer { background: transparent !important; border: 0 !important; }
+.psc-kit-table .ia_tableComponent__filterContainer { display: none !important; }
+/* the table is as tall as a whole number of rows (plus the totals row when it shows), so the last row is never cut in half; the leftover
+   is empty space below it. --kit-row is a row's pitch (its height plus the 1 px line the Table puts between rows: 36 + 1, compact 26 + 1) and follows the density, --kit-foot-h the totals row (the Table's footer is 30 px). */
+.psc-kit-table { flex: 0 0 auto !important; height: calc(round(down, calc(100% - var(--kit-foot-h)), var(--kit-row)) + var(--kit-foot-h)) !important; }
+/* one scroll bar: the Table's own list scrolls (themed by the global scrollbar rule) and the body's other layer, which the Table also gives a scroll bar, never does; the header strip scrolls too, with its bar painted transparent, so it and the body have the same width in either bar style and the columns line up */
+.psc-kit-table .ia_table__body > .ReactVirtualized__Grid { overflow-y: scroll !important; }
+.psc-kit-table .ia_table__body > .column-group { overflow: hidden !important; }
+.psc-kit-headrow { overflow-x: hidden !important; overflow-y: scroll !important; scrollbar-color: transparent transparent; background: var(--kit-raised); border-bottom: 1px solid var(--kit-line); border-top: 1px solid var(--kit-line); }
+.psc-kit-hc { box-sizing: border-box; padding: 0 2px 0 8px; overflow: hidden; min-width: 0; height: 100%; }
+.psc-kit-hl { color: var(--kit-fg-muted); font-size: var(--kit-fs-head); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.psc-kit-hm { color: var(--kit-accent); font-size: var(--kit-fs-small); font-weight: 600; white-space: nowrap; padding: 0 8px 0 6px; }
+.psc-kit-hm-none { display: none !important; }
+.psc-kit-dots { position: relative; width: 24px !important; min-width: 24px !important; height: 24px !important; min-height: 24px !important; padding: 0 !important; border: 0 !important;
+  border-radius: 6px !important; background: transparent !important; font-size: var(--kit-fs-small) !important; color: var(--kit-fg-faint) !important; cursor: pointer; }
+/* the button's text is its accessible name: kept in the page, clipped to nothing */
+.psc-kit-dots * { position: absolute !important; width: 1px !important; height: 1px !important; overflow: hidden !important; clip-path: inset(50%) !important; white-space: nowrap !important; }
+.psc-kit-dots::after { content: ""; position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; margin: -1.5px 0 0 -1.5px; border-radius: 50%; background: currentColor;
+  box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor; }
+.psc-kit-dots:hover:enabled { background: var(--kit-hover) !important; color: var(--kit-fg) !important; }
+.psc-kit-dots:focus-visible, .psc-kit-mi:focus-visible { outline: 2px solid var(--kit-accent) !important; outline-offset: -2px; }
+.ia_popup:has(.psc-kit-menu):focus-visible { outline: 2px solid var(--kit-accent); outline-offset: -2px; }
+.psc-kit-foot { background: var(--kit-total) !important; border-top: 2px solid var(--kit-line-strong); border-bottom: 1px solid var(--kit-line); padding: 0 8px; box-sizing: border-box; color: var(--kit-fg) !important; font-size: var(--kit-fs-small) !important;
+  font-weight: 600; font-variant-numeric: tabular-nums; }
+.psc-kit-table .ia_table__foot__footer__cell { background: var(--kit-total) !important; }
+.psc-kit-row { background: transparent !important; border-bottom: 1px solid var(--kit-line); }
+.psc-kit-row:hover, .psc-kit-row:hover .psc-kit-cell { background: var(--kit-hover) !important; }
+.psc-kit-cell { color: var(--kit-fg); font-size: var(--kit-fs); font-variant-numeric: tabular-nums; padding: 0 8px; box-sizing: border-box; }
+.psc-kit-dense .psc-kit-cell { font-size: var(--kit-fs-small); }
+.psc-kit-dense .psc-kit-chip > .content { padding: 0 8px !important; }
+/* group heading rows come from the data (rows with a style); the click is the Table's row click */
+.psc-kit-table .psc-kit-grouprow { background: var(--kit-accent-soft) !important; cursor: pointer; }
+.psc-kit-table .psc-kit-grouprow:hover { background: color-mix(in srgb, var(--kit-accent) 26%, transparent) !important; }
+.psc-kit-grouprow .ia_table__cell { background: transparent !important; border: 0 !important; box-shadow: none !important; font-weight: 700; color: var(--kit-fg); }
+.psc-kit-grouprow, .psc-kit-grouprow * { outline: none !important; }
+.psc-kit-grouprow .ia_table__cell:first-child { overflow: visible; }
+.psc-kit-grouprow .ia_table__cell:first-child .content { white-space: nowrap; overflow: visible; position: relative; z-index: 2; }
+.psc-kit-noterow .ia_table__cell { color: var(--kit-fg-muted); font-style: italic; border-right: 0; }
+/* a chip cell: the Table puts the cell's style classes on the cell itself, so the pill is drawn on its text box */
+.psc-kit-chip > .content { display: inline-block; flex: 0 1 auto !important; width: fit-content !important; max-width: 100%; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis;
+  padding: 2px 10px !important; border-radius: 999px; border: 1px solid var(--kit-line); background: var(--kit-hover);
+  color: var(--kit-fg-muted); font-size: var(--kit-fs-small); line-height: 14px; white-space: nowrap; }
+.psc-kit-tone-ok > .content { color: var(--kit-ok); border-color: color-mix(in srgb, var(--kit-ok) 45%, transparent); background: color-mix(in srgb, var(--kit-ok) 10%, transparent); }
+.psc-kit-tone-warn > .content { color: var(--kit-warn); border-color: color-mix(in srgb, var(--kit-warn) 45%, transparent); background: color-mix(in srgb, var(--kit-warn) 10%, transparent); }
+.psc-kit-tone-danger > .content { color: var(--kit-danger); border-color: color-mix(in srgb, var(--kit-danger) 45%, transparent); background: color-mix(in srgb, var(--kit-danger) 12%, transparent); }
+.psc-kit-tone-info > .content { color: var(--kit-info); border-color: color-mix(in srgb, var(--kit-info) 45%, transparent); background: color-mix(in srgb, var(--kit-info) 10%, transparent); }
+
+/* the menus */
+.ia_popup:has(.psc-kit-menu) { background: var(--kit-popup); border: 1px solid var(--kit-line); border-radius: calc(var(--kit-radius) + 4px); overflow: hidden; box-shadow: var(--kit-shadow); }
+.ia_popup:has(.psc-kit-menu) .ia_popup__header { display: none; }
+:has(> [id^="popup-kit-menu"]) > .modal { background: transparent; }
+.psc-kit-menu { background: var(--kit-popup); color: var(--kit-fg); padding: 6px; min-width: 220px; } /* min width, nowrap labels */
+.psc-kit-mi-name { white-space: nowrap; }
+.psc-kit-mi { height: 30px; padding: 0 8px; border-radius: 6px; gap: 6px; cursor: pointer; }
+.psc-kit-mi:hover, .psc-kit-mi:focus { background: var(--kit-hover); }
+.psc-kit-mi-check { color: var(--kit-accent); font-size: var(--kit-fs); font-weight: 700; text-align: center; }
+.psc-kit-mi-name { color: var(--kit-fg); font-size: var(--kit-fs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.psc-kit-mi-top { margin-top: 5px; border-top: 1px solid var(--kit-line); border-radius: 0 0 6px 6px; height: 34px; padding-top: 4px; }
+/* the label and the input start where the items' text does: the item's 8 px padding, its 18 px tick and its 6 px gap */
+.psc-kit-menufilter { padding: 6px 8px 2px 32px; gap: 8px; }
+.psc-kit-menufilter-label { color: var(--kit-fg); font-size: var(--kit-fs-head); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+/* ===== END table kit ===== */

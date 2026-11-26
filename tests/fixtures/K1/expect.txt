@@ -1,0 +1,3 @@
+proj/ignition/script-python/kittable/code.py:1: K1 table kit copy differs
+proj/com.inductiveautomation.perspective/stylesheet/stylesheet.css:1: K1 stylesheet's table kit block differs
+proj/com.inductiveautomation.perspective/views/Kit/TableMenu/view.json:1: K1 table kit view differs

@@ -22,6 +22,7 @@ lint-gate: FAIL - 2 new, 41 baseline, 1 excepted
 | --- | --- |
 | `STANDARD.md` | The rules, each with the check ID that enforces it or `review` |
 | `gate/` | ign-lint, pylint and `ign-check.py` run over a repo |
+| `kit/table/` | The Perspective table kit's source; the gate's K1 rule fails a project whose copy differs |
 | Reusable workflow | Runs the gate in CI; callers use `caller-example.yml` |
 | `lint.json` | Per-repo exceptions, each with a reason |
 | `lint-baseline.json` | Findings already present, so only new ones fail |
@@ -45,6 +46,10 @@ lint-gate: FAIL - 2 new, 41 baseline, 1 excepted
    ign-lint does not look into the script library; the gate drops its unused-property finding when the view calls the same project's library and a `code.py` there reads `.params.areaId` (or `.custom.areaId`, `.params["areaId"]`). A property read any other way needs an exception such as `{"file": "views/Main/view.json", "rule": "UnusedCustomPropertiesRule", "match": "params.areaId:", "reason": "read by pkg.mod.save"}`.
 5. To have V4 report a `var(--name)` that nothing defines, add `"cssVariables": {"stylesheets": [...], "prefixes": [...]}` to `lint.json`: stylesheet paths from the repo root, and the prefixes of theme variables the gateway supplies, such as `--neutral-`.
 6. To leave third-party source alone, add `"vendored": [{"path": "src/ia", "reason": "IA's Solar Public Demo as downloaded (MIT); changed only at build time"}]` to `lint.json`: folders from the repo root, each with a reason. Every pass skips them, and the gate prints one line per folder with its file count and reason. The script packages inside stay declared, so project code that calls them is not reported undefined. The gate fails if an entry has no reason, is not a folder in the repo, is the repo root, uses `..` or an absolute path, or leaves no view or script to lint. Baseline entries and exceptions that point inside a vendored folder go stale and the gate asks you to remove them.
+
+## Table kit
+
+`kit/table/` holds the source of the table kit (toolbar, column menu and group rows round the stock Table). A project copies it in, with no shared parent project, and refreshes the copy when the gate's K1 rule fails; [kit/table/README.md](kit/table/README.md) has the steps.
 
 ## Licence
 
