@@ -75,6 +75,7 @@ What a project must look like when someone opens it in the Designer. Each rule c
 | Rule | Why | Check |
 | --- | --- | --- |
 | Every file in a resource folder is declared in its `resource.json`, and nothing declared is missing. | An undeclared file is undefined behaviour at import. | P1 |
+| Gateway timers and event scripts are 8.3 file resources (`ignition/timer/<name>/handleTimerEvent.py` and the like), never an `event-scripts` `data.bin`. | A script in a binary file cannot be read, diffed or linted. | P2 |
 | A project's copy of the table kit (the `kittable` script package, `Kit/*` views and stylesheet block) is identical to `kit/table/` at the standards tag it is checked against. | One source, so a fix to the kit reaches every project. | K1 |
 | `.resources/` is gitignored; a `resource.json` is committed with the file it describes. | Generated state stays out of git. | review |
 | Vendored third-party source is declared in `lint.json` with a folder and a reason, and is not linted; what is built from it is. | Third-party code is not ours to restyle, and a declared skip stays visible in the gate's output. | review |

@@ -1021,6 +1021,15 @@ def check_p1(repo):
             yield rel, 1, "P1", msg
 
 
+def check_p2(repo):
+    """Gateway event scripts held in an event-scripts data.bin instead of 8.3 file resources."""
+    for dirpath, _, filenames in repo.dirs:
+        if dirpath.replace(os.sep, "/").endswith("/ignition/event-scripts") and "data.bin" in filenames:
+            yield repo.rel(os.path.join(dirpath, "data.bin")), 1, "P2", \
+                "gateway event scripts in an opaque data.bin; write each as a file resource " \
+                "(ignition/timer/<name>/handleTimerEvent.py and the like)"
+
+
 # IGN_KIT_DIR points the rule at another kit, for the test fixtures.
 KIT_DIR = os.environ.get("IGN_KIT_DIR") or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "kit", "table")
 KIT_VIEWS = ("Table", "TableMenu", "TableMenuItem")
@@ -1110,6 +1119,7 @@ RULES = {
     "T3": ("warns on a UDT member tag with no documentation, in the type or on every instance", check_t3),
     "Q1": ("named query with a QueryString parameter", check_q1),
     "P1": ("resource folder that does not match its resource.json files", check_p1),
+    "P2": ("gateway event scripts in an event-scripts data.bin, not 8.3 file resources", check_p2),
     "K1": ("table kit copy (kittable, Kit/Table views, stylesheet block) that differs from kit/table", check_k1),
 }
 

@@ -1,0 +1,1 @@
+proj/ignition/event-scripts/data.bin:1: P2 gateway event scripts in an opaque data.bin
