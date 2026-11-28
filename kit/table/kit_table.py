@@ -205,7 +205,7 @@ def head_slot(i):
     dots = comp("ia.input.button", "D%d" % i, {"text": "", "style": {"classes": "kit-dots"}}, fix("24px"),
                 {"props.text": expr('{%s.title} + " column menu"' % h)}, events={"dom": {"onClick": script(code)}})
     # hidden until the display binding has run: a cell drawn before its width binding is 10 px wide and scrolls its contents (first paint)
-    return flex("H%d" % i, [title, mark, dots], classes="kit-hc", align="center", pos={"grow": 0, "shrink": 0, "basis": "0px"}, style={"display": "none"},
+    return flex("H%d" % i, [title, mark, dots], classes="kit-hc", align="center", pos={"grow": 0, "shrink": 0, "basis": "0px"}, style={"display": "none", "overflow": "hidden"},
                 binds={"position.basis": expr('if({%s.w} > 0, {%s.w} + "px", "0px")' % (h, h)), "position.grow": prop(h + ".grow"),
                        "props.style.display": expr('if({%s.show}, "flex", "none")' % h)})
 
@@ -219,13 +219,13 @@ def table_view():
         flex("Paging", [
             pill("Newer", "Newer", "kittable.setPage(self.view, -1)", 'if({view.custom.info.newer}, "kit-pill", "kit-pill kit-pill-off")'),
             pill("Older", "Older", "kittable.setPage(self.view, 1)", 'if({view.custom.info.older}, "kit-pill", "kit-pill kit-pill-off")'),
-        ], align="center", gap=8, pos=fix("auto"), binds={"props.style.display": expr('if({view.custom.info.paged}, "flex", "none")')}),
+        ], align="center", gap=8, pos=fix("auto"), style={"overflow": "hidden"}, binds={"props.style.display": expr('if({view.custom.info.paged}, "flex", "none")')}),
         flex("Selection", [
             comp("ia.display.label", "Selected", {"text": ""}, fix("auto"), {"props.text": sb({"sel": "{view.custom.sel}"}, "return kittable.getSelectionText(value['sel'])"), "props.style.classes": expr('"kit-count"')}),
             pill("Copy", "Copy", "kittable.copySelection(self.view)"),
             pill("Clear", "Clear", "self.view.custom.sel = []"),
-        ], align="center", gap=8, pos=fix("auto"), binds={"props.style.display": expr('if(len({view.custom.sel}) > 0, "flex", "none")')}),
-    ], classes="kit-info", align="center", pos=fix("30px"))
+        ], align="center", gap=8, pos=fix("auto"), style={"overflow": "hidden"}, binds={"props.style.display": expr('if(len({view.custom.sel}) > 0, "flex", "none")')}),
+    ], classes="kit-info", align="center", pos=fix("30px"), style={"overflow": "hidden"})
     bar = flex("Bar", [
         comp("ia.input.text-field", "Search", {"text": "", "placeholder": "Search", "deferUpdates": False, "style": {"classes": "kit-input kit-search"}}, {"grow": 1, "shrink": 1, "basis": "230px"},
              {"props.text": prop("view.custom.search", True),
@@ -243,21 +243,23 @@ def table_view():
             pill("Chip", "", "kittable.setGroup(self.view, u'')", '"kit-pill kit-pill-on"'),
             pill("ExpandAll", "Expand all", "kittable.setAllGroups(self.view, False)", '"kit-pill kit-wide"'),
             pill("CollapseAll", "Collapse all", "kittable.setAllGroups(self.view, True)", '"kit-pill kit-wide"'),
-        ], align="center", gap=8, pos=fix("auto"), binds={"props.style.display": expr('if({view.custom.groupBy} != "", "flex", "none")')}),
+        ], align="center", gap=8, pos=fix("auto"), style={"overflow": "hidden"}, binds={"props.style.display": expr('if({view.custom.groupBy} != "", "flex", "none")')}),
         comp("ia.input.button", "More", {"text": "More", "style": {"classes": "kit-dots kit-more"}}, fix("28px"),
              events={"dom": {"onClick": script("kittable.openMenu(self.view, event, self.page, 'more', u'', self.view.custom.menuY)")}}),
         comp("ia.input.button", "Columns", {"text": "Columns", "style": {"classes": "kit-btn kit-wide"}}, fix("120px"),
              events={"dom": {"onClick": script("kittable.openMenu(self.view, event, self.page, 'cols', u'', self.view.custom.menuY)")}}),
         comp("ia.input.button", "Export", {"text": "Export", "style": {"classes": "kit-btn kit-wide"}}, fix("120px"),
              events={"component": {"onActionPerformed": script("kittable.exportCsv(self.view)")}}),
-    ], classes="kit-bar", align="center", pos=fix("42px"))
+    ], classes="kit-bar", align="center", pos=fix("42px"), style={"overflow": "hidden"})
     # the Grouped chip's text names the column; set from the group
     grp = [c for c in bar["children"] if c["meta"]["name"] == "Grouped"][0]
     grp["children"][0]["propConfig"]["props.text"] = {"binding": sb({"group": "{view.custom.groupBy}", "columns": "{view.params.columns}"}, "return kittable.getGroupChip(value)")}
 
-    head = flex("HeadRow", [head_slot(i) for i in range(16)], classes="kit-headrow", align="stretch", pos=fix("34px"))
+    # Perspective writes overflow: auto inline on a flex container that sets none, and an inline style beats the stylesheet: with classic
+    # scroll bars a box a fraction of a pixel too small drew a second bar beside the Table's. Every container here says overflow hidden.
+    head = flex("HeadRow", [head_slot(i) for i in range(16)], classes="kit-headrow", align="stretch", pos=fix("34px"), style={"overflow": "hidden"})
     root = flex("Root", [info, bar, head, flex("Body", [table()], direction="column", pos=grow(1), style={"minHeight": "0px", "overflow": "hidden"})],
-                direction="column", classes="kit-root",
+                direction="column", classes="kit-root", style={"overflow": "hidden"},
                 binds={"props.style.classes": expr('"kit-root" + if({view.custom.dense}, " kit-dense", "") + if({view.custom.hasTotals}, " kit-totals", "")')},
                 scripts=handlers("kitCmd", "kittable.runCmd(self.view, payload)"))
     slot = {"show": False, "w": 0, "grow": 0, "title": "", "field": "", "mark": "", "num": False}
